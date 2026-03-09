@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
+
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Traits\AttendanceStatusTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class AttendanceController extends Controller
 {
+    use AttendanceStatusTrait;
+
     // ── Check-in ──
     public function checkin(Request $request)
     {
@@ -77,6 +81,13 @@ class AttendanceController extends Controller
             'person_in_charge_phone' => $request->pic_phone,
         ]);
 
+         $freshAttendance = Attendance::where('user_id', $user->id)
+        ->whereDate('attendance_date', today())
+        ->latest('checkin_time')
+        ->first();
+
+        $attendanceStatus = $this->getAttendanceStatus($freshAttendance);
+
         return response()->json([
             'success' => true,
             'message' => 'Check-in berhasil di ' . $attendance->store_name . '.',
@@ -85,10 +96,7 @@ class AttendanceController extends Controller
                 'store_name'        => $attendance->store_name,
                 'checkin_time'      => $attendance->checkin_time->format('H:i'),
                 'checkin_photo_url' => Storage::url($photoPath),
-                'attendance_status' => [
-                    'can_checkin'  => false,
-                    'can_checkout' => true,
-                ],
+                'attendance_status' => $attendanceStatus,
             ],
         ], 201);
     }
@@ -148,6 +156,13 @@ class AttendanceController extends Controller
             'work_duration_minutes' => $durationMinutes,
         ]);
 
+        $freshAttendance = Attendance::where('user_id', $user->id)
+            ->whereDate('attendance_date', today())
+            ->latest('checkin_time')
+            ->first();
+
+        $attendanceStatus = $this->getAttendanceStatus($freshAttendance);
+
         return response()->json([
             'success' => true,
             'message' => 'Check-out berhasil dari ' . $attendance->store_name . '.',
@@ -159,10 +174,7 @@ class AttendanceController extends Controller
                 'work_duration_minutes' => $durationMinutes,
                 'work_duration_label' => $this->formatDuration($durationMinutes),
                 'checkout_photo_url'  => Storage::url($photoPath),
-                'attendance_status'   => [
-                    'can_checkin'  => true,
-                    'can_checkout' => false,
-                ],
+                'attendance_status'   => $attendanceStatus,
             ],
         ]);
     }
