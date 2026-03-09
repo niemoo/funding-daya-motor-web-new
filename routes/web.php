@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,8 +24,10 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role:Admin');
 
     // Attendance — semua role, tapi data difilter di controller
-    Route::get('/attendances', [AttendanceController::class, 'index'])->name('attendances.index');
-    Route::get('/attendances/export', [AttendanceController::class, 'export'])->name('attendances.export');
+    Route::get('/attendances/export', [AttendanceController::class, 'export'])
+        ->name('attendances.export');
+    Route::get('/attendances', [AttendanceController::class, 'index'])
+        ->name('attendances.index');
 
 });
 

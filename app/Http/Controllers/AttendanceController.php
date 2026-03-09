@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Exports\AttendancesExport;
 use App\Models\Attendance;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AttendanceController extends Controller
 {
@@ -55,5 +56,16 @@ class AttendanceController extends Controller
             : collect();
 
         return view('attendances.index', compact('attendances', 'salesList', 'sort', 'dir'));
+    }
+
+    public function export(Request $request)
+    {
+        $filters = $request->all();
+        $filters['is_admin']     = auth()->user()->isAdmin();
+        $filters['user_auth_id'] = auth()->id();
+
+        $filename = 'absensi-' . now()->format('d-m-Y') . '.xlsx';
+
+        return Excel::download(new AttendancesExport($filters), $filename);
     }
 }

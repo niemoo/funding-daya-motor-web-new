@@ -10,7 +10,7 @@ class AttendanceSeeder extends Seeder
 {
     public function run(): void
     {
-        $photo = 'https://assets.kompasiana.com/items/album/2018/12/04/memee-5c06908ebde575485b253ed4.jpg';
+        $photo = 'https://i.pinimg.com/736x/6f/4d/bb/6f4dbb317dff5f8aff6828609dcd8243.jpg';
 
         $today    = Carbon::today();
         $tomorrow = Carbon::today()->addDay();
