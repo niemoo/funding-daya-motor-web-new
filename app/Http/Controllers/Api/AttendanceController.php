@@ -81,12 +81,7 @@ class AttendanceController extends Controller
             'person_in_charge_phone' => $request->pic_phone,
         ]);
 
-         $freshAttendance = Attendance::where('user_id', $user->id)
-        ->whereDate('attendance_date', today())
-        ->latest('checkin_time')
-        ->first();
-
-        $attendanceStatus = $this->getAttendanceStatus($freshAttendance);
+        $attendanceStatus = $this->getAttendanceStatus($user);
 
         return response()->json([
             'success' => true,
@@ -156,12 +151,7 @@ class AttendanceController extends Controller
             'work_duration_minutes' => $durationMinutes,
         ]);
 
-        $freshAttendance = Attendance::where('user_id', $user->id)
-            ->whereDate('attendance_date', today())
-            ->latest('checkin_time')
-            ->first();
-
-        $attendanceStatus = $this->getAttendanceStatus($freshAttendance);
+        $attendanceStatus = $this->getAttendanceStatus($user);
 
         return response()->json([
             'success' => true,
