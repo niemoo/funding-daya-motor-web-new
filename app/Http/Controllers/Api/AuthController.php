@@ -45,7 +45,7 @@ class AuthController extends Controller
         $attendanceStatus = $this->getAttendanceStatus($todayAttendance);
 
         // Hapus token lama, buat token baru
-        $user->tokens()->delete();
+        // $user->tokens()->delete();
         $token = $user->createToken('mobile-app')->plainTextToken;
 
         return response()->json([
