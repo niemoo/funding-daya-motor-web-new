@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Attendance;
+use App\Models\User;
 use App\Traits\AttendanceStatusTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +19,7 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $user = \App\Models\User::with('role')
+        $user = User::with('role')
             ->where('email', $request->email)
             ->first();
 
@@ -37,14 +37,8 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Cek status absensi hari ini
-        $todayAttendance = Attendance::where('user_id', $user->id)
-            ->whereDate('attendance_date', today())
-            ->latest('checkin_time')
-            ->first();
-
         // Flagging status
-        $attendanceStatus = $this->getAttendanceStatus($todayAttendance);
+        $attendanceStatus = $this->getAttendanceStatus($user);
 
         // Hapus token lama, buat token baru
         // $user->tokens()->delete();
@@ -80,12 +74,7 @@ class AuthController extends Controller
     {
         $user = $request->user()->load('role');
 
-        $todayAttendance = Attendance::where('user_id', $user->id)
-            ->whereDate('attendance_date', today())
-            ->latest('checkin_time')
-            ->first();
-
-        $attendanceStatus = $this->getAttendanceStatus($todayAttendance);
+        $attendanceStatus = $this->getAttendanceStatus($user);
 
         return response()->json([
             'success' => true,
