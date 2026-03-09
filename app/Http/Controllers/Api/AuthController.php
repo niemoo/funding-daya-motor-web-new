@@ -151,15 +151,10 @@ class AuthController extends Controller
     public function attendanceStatus(Request $request)
     {
         $user = $request->user();
-
-        $todayAttendance = Attendance::where('user_id', $user->id)
-            ->whereDate('attendance_date', today())
-            ->latest('checkin_time')
-            ->first();
-
+   
         return response()->json([
             'success' => true,
-            'data'    => $this->getAttendanceStatus($todayAttendance),
+            'data'    => $this->getAttendanceStatus($user),
         ]);
     }
 }
