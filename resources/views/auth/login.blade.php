@@ -20,7 +20,7 @@
                     class="w-11 h-11 rounded-xl flex items-center justify-center text-xl bg-white/15 border border-white/25">
                     📍
                 </div>
-                <span class="text-[17px] font-extrabold text-white tracking-tight">SalesTrack</span>
+                <span class="text-[17px] font-extrabold text-white tracking-tight">OptiPart</span>
             </div>
 
             {{-- Hero --}}
@@ -36,7 +36,7 @@
 
             {{-- Stats --}}
             <div class="relative z-10 flex gap-9">
-                <div>
+                {{-- <div>
                     <div class="text-[28px] font-extrabold text-white tracking-tight">248</div>
                     <div class="text-[12px] text-white/50 mt-0.5">Total Kunjungan</div>
                 </div>
@@ -47,7 +47,7 @@
                 <div>
                     <div class="text-[28px] font-extrabold text-white tracking-tight">96%</div>
                     <div class="text-[12px] text-white/50 mt-0.5">Kehadiran</div>
-                </div>
+                </div> --}}
             </div>
         </div>
 
@@ -58,7 +58,7 @@
                 {{-- Mobile brand --}}
                 <div class="flex items-center gap-2.5 mb-8 lg:hidden">
                     <div class="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-lg">📍</div>
-                    <span class="text-[16px] font-extrabold text-slate-800">SalesTrack</span>
+                    <span class="text-[16px] font-extrabold text-slate-800">OptiPart</span>
                 </div>
 
                 <h2 class="text-[26px] font-extrabold text-slate-800 tracking-tight mb-1.5">Selamat Datang 👋</h2>
@@ -106,7 +106,7 @@
                 </form>
 
                 <div class="mt-7 pt-5 border-t border-slate-100 text-center text-[12px] text-slate-400">
-                    © {{ date('Y') }} SalesTrack · Sistem khusus tim internal
+                    © {{ date('Y') }} OptiPart · Sistem khusus tim internal
                 </div>
             </div>
         </div>

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Dashboard' }} — SalesTrack</title>
+    <title>{{ $title ?? 'Dashboard' }} — OptiPart</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -98,7 +98,7 @@
                     style="box-shadow:0 3px 10px rgba(29,97,175,0.3)">
                     📍
                 </div>
-                <span class="text-[15px] font-extrabold text-slate-800 tracking-tight">SalesTrack</span>
+                <span class="text-[15px] font-extrabold text-slate-800 tracking-tight">OptiPart</span>
                 {{-- Close btn (mobile only) --}}
                 <button onclick="closeSidebar()"
                     class="ml-auto lg:hidden w-7 h-7 rounded-[7px] bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center text-sm transition-colors">
