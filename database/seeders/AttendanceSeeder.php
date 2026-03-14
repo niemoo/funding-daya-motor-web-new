@@ -59,8 +59,8 @@ class AttendanceSeeder extends Seeder
             // ── User 2, Keesokan harinya, Kunjungan 1 (masih di lapangan) ──
             [
                 'user_id'                  => 2,
-                'attendance_date'          => $tomorrow->format('Y-m-d'),
-                'checkin_time'             => $tomorrow->copy()->setTime(8, 0),
+                'attendance_date'          => $today->format('Y-m-d'),
+                'checkin_time'             => $today->copy()->setTime(13, 0),
                 'checkin_latitude'         => '-6.119863600096797',
                 'checkin_longitude'        => '106.87096430207403',
                 'checkin_photo'            => $photo,

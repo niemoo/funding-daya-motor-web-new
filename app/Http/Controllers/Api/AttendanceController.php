@@ -174,14 +174,42 @@ class AttendanceController extends Controller
             ? Carbon::parse($request->date)
             : Carbon::today();
 
+        // ── Auto-checkout ongoing dari hari sebelumnya ────────────────────────
+        // Hanya berlaku kalau $date > attendance_date ongoing tersebut
+        $ongoingPastDay = Attendance::where('user_id', $user->id)
+            ->whereNull('checkout_time')
+            ->whereDate('attendance_date', '<', $date)
+            ->latest('checkin_time')
+            ->first();
+
+        if ($ongoingPastDay) {
+            $autoCheckoutTime = Carbon::parse($ongoingPastDay->attendance_date)
+                ->setTime(23, 59, 59);
+
+            $ongoingPastDay->update([
+                'checkout_time'         => $autoCheckoutTime,
+                'checkout_latitude'     => null,
+                'checkout_longitude'    => null,
+                'checkout_photo'        => null,
+                'work_duration_minutes' => (int) $ongoingPastDay->checkin_time
+                                            ->diffInMinutes($autoCheckoutTime),
+                'is_auto_checkout'      => true,
+            ]);
+        }
+
+        // ── Ambil attendances sesuai date yang di-request ─────────────────────
         $attendances = Attendance::where('user_id', $user->id)
             ->whereDate('attendance_date', $date)
             ->orderByDesc('id')
             ->get();
 
-        $latestAttendance = Attendance::where('user_id', $user->id)
-            ->orderByDesc('id')
+        // ── Cek ongoing (setelah auto-checkout, pasti hanya hari ini atau null) 
+        $ongoingAttendance = Attendance::where('user_id', $user->id)
+            ->whereNull('checkout_time')
+            ->latest('checkin_time')
             ->first();
+
+        $canCheckIn = $ongoingAttendance === null;
 
         $data = $attendances->map(function ($att) {
             return [
@@ -206,13 +234,19 @@ class AttendanceController extends Controller
                 'checkin_longitude'      => $att->checkin_longitude,
                 'checkout_latitude'      => $att->checkout_latitude,
                 'checkout_longitude'     => $att->checkout_longitude,
+                'is_auto_checkout'       => $att->is_auto_checkout,
             ];
         });
 
         return response()->json([
             'success' => true,
             'data'    => [
-                'is_checkout'      => $latestAttendance?->checkout_time ? true : false,
+                'can_check_in'     => $canCheckIn,
+                'ongoing'          => $ongoingAttendance ? [
+                    'attendance_id'     => $ongoingAttendance->id,
+                    'store_name'        => $ongoingAttendance->store_name,
+                    'checkin_time_full' => $ongoingAttendance->checkin_time->toIso8601String(),
+                ] : null,
                 'date'             => $date->format('Y-m-d'),
                 'date_label'       => $date->locale('id')->isoFormat('dddd, D MMMM Y'),
                 'total_visits'     => $attendances->count(),
@@ -226,36 +260,33 @@ class AttendanceController extends Controller
     // ── Statistik: Hari ini & 7 Hari ──
     public function statistics(Request $request)
     {
+        $request->validate([
+            'date' => 'nullable|date_format:Y-m-d',
+        ]);
+
         $user = $request->user();
+        $date = $request->filled('date')
+            ? Carbon::parse($request->date)
+            : Carbon::today();
 
-        // ── Hari ini ──
-        $todayVisits = Attendance::where('user_id', $user->id)
-            ->whereDate('attendance_date', today())
-            ->count();
+        // ── Hari ini (berdasarkan $date) ──────────────────────────────────────
+        $todayAttendances = Attendance::where('user_id', $user->id)
+            ->whereDate('attendance_date', $date)
+            ->get();
 
-        $todayCompleted = Attendance::where('user_id', $user->id)
-            ->whereDate('attendance_date', today())
-            ->whereNotNull('checkout_time')
-            ->count();
-
-        $todayOngoing = Attendance::where('user_id', $user->id)
-            ->whereDate('attendance_date', today())
-            ->whereNull('checkout_time')
-            ->count();
-
-        // ── 7 Hari Terakhir ──
-        $weeklyData = collect(range(6, 0))->map(function ($daysAgo) use ($user) {
-            $date  = Carbon::today()->subDays($daysAgo);
+        // ── 7 Hari Terakhir dari $date ────────────────────────────────────────
+        $weeklyData = collect(range(6, 0))->map(function ($daysAgo) use ($user, $date) {
+            $day   = $date->copy()->subDays($daysAgo);
             $count = Attendance::where('user_id', $user->id)
-                ->whereDate('attendance_date', $date)
+                ->whereDate('attendance_date', $day)
                 ->count();
 
             return [
-                'date'       => $date->format('Y-m-d'),
-                'date_label' => $date->locale('id')->isoFormat('ddd, D MMM'),
-                'day_short'  => $date->locale('id')->isoFormat('ddd'),
+                'date'       => $day->format('Y-m-d'),
+                'date_label' => $day->locale('id')->isoFormat('ddd, D MMM'),
+                'day_short'  => $day->locale('id')->isoFormat('ddd'),
                 'visits'     => $count,
-                'is_today'   => $date->isToday(),
+                'is_today'   => $day->toDateString() === $date->toDateString(),
             ];
         });
 
@@ -265,11 +296,11 @@ class AttendanceController extends Controller
             'success' => true,
             'data'    => [
                 'today' => [
-                    'date'            => today()->format('Y-m-d'),
-                    'date_label'      => today()->locale('id')->isoFormat('dddd, D MMMM Y'),
-                    'total_visits'    => $todayVisits,
-                    'completed'       => $todayCompleted,
-                    'ongoing'         => $todayOngoing,
+                    'date'         => $date->format('Y-m-d'),
+                    'date_label'   => $date->locale('id')->isoFormat('dddd, D MMMM Y'),
+                    'total_visits' => $todayAttendances->count(),
+                    'completed'    => $todayAttendances->whereNotNull('checkout_time')->count(),
+                    'ongoing'      => $todayAttendances->whereNull('checkout_time')->count(),
                 ],
                 'weekly' => [
                     'total_visits'    => $weeklyTotal,
