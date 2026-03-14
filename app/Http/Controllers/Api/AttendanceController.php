@@ -241,7 +241,7 @@ class AttendanceController extends Controller
         return response()->json([
             'success' => true,
             'data'    => [
-                'can_check_in'     => $canCheckIn,
+                'can_checkin'     => $canCheckIn,
                 'ongoing'          => $ongoingAttendance ? [
                     'attendance_id'     => $ongoingAttendance->id,
                     'store_name'        => $ongoingAttendance->store_name,
