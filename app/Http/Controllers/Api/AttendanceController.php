@@ -5,15 +5,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
-use App\Traits\AttendanceStatusTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class AttendanceController extends Controller
 {
-    use AttendanceStatusTrait;
-
     // ── Check-in ──
     public function checkin(Request $request)
     {
@@ -81,7 +78,7 @@ class AttendanceController extends Controller
             'person_in_charge_phone' => $request->pic_phone,
         ]);
 
-        $attendanceStatus = $this->getAttendanceStatus($user);
+        // $attendanceStatus = $this->getAttendanceStatus($user);
 
         return response()->json([
             'success' => true,
@@ -91,7 +88,6 @@ class AttendanceController extends Controller
                 'store_name'        => $attendance->store_name,
                 'checkin_time'      => $attendance->checkin_time->format('H:i'),
                 'checkin_photo_url' => Storage::url($photoPath),
-                'attendance_status' => $attendanceStatus,
             ],
         ], 201);
     }
@@ -151,8 +147,6 @@ class AttendanceController extends Controller
             'work_duration_minutes' => $durationMinutes,
         ]);
 
-        $attendanceStatus = $this->getAttendanceStatus($user);
-
         return response()->json([
             'success' => true,
             'message' => 'Check-out berhasil dari ' . $attendance->store_name . '.',
@@ -164,7 +158,6 @@ class AttendanceController extends Controller
                 'work_duration_minutes' => $durationMinutes,
                 'work_duration_label' => $this->formatDuration($durationMinutes),
                 'checkout_photo_url'  => Storage::url($photoPath),
-                'attendance_status'   => $attendanceStatus,
             ],
         ]);
     }
@@ -183,8 +176,12 @@ class AttendanceController extends Controller
 
         $attendances = Attendance::where('user_id', $user->id)
             ->whereDate('attendance_date', $date)
-            ->orderBy('checkin_time', 'asc')
+            ->orderByDesc('id')
             ->get();
+
+        $latestAttendance = Attendance::where('user_id', $user->id)
+            ->orderByDesc('id')
+            ->first();
 
         $data = $attendances->map(function ($att) {
             return [
@@ -215,6 +212,7 @@ class AttendanceController extends Controller
         return response()->json([
             'success' => true,
             'data'    => [
+                'is_checkout'      => $latestAttendance?->checkout_time ? true : false,
                 'date'             => $date->format('Y-m-d'),
                 'date_label'       => $date->locale('id')->isoFormat('dddd, D MMMM Y'),
                 'total_visits'     => $attendances->count(),
