@@ -36,11 +36,20 @@ class AttendanceController extends Controller
         // Filter by status
         if ($request->filled('status')) {
             if ($request->status === 'done') {
-                $query->whereNotNull('checkout_time');
+                $query->whereNotNull('checkout_time')->where('is_auto_checkout', false);
             } elseif ($request->status === 'ongoing') {
                 $query->whereNull('checkout_time');
+            } elseif ($request->status === 'auto_checkout') {
+                $query->where('is_auto_checkout', true);
             }
         }
+        // if ($request->filled('status')) {
+        //     if ($request->status === 'done') {
+        //         $query->whereNotNull('checkout_time');
+        //     } elseif ($request->status === 'ongoing') {
+        //         $query->whereNull('checkout_time');
+        //     }
+        // }
 
         // Sort
         $sortable = ['attendance_date', 'checkin_time', 'store_name', 'work_duration_minutes'];

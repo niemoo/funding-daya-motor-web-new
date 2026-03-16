@@ -100,7 +100,15 @@
             <option value="">Semua Status</option>
             <option value="ongoing" {{ request('status') === 'ongoing' ? 'selected' : '' }}>Di Lapangan</option>
             <option value="done" {{ request('status') === 'done' ? 'selected' : '' }}>Selesai</option>
+            <option value="auto_checkout" {{ request('status') === 'auto_checkout' ? 'selected' : '' }}>Tidak Checkout
+            </option>
         </select>
+        {{-- <select name="status"
+            class="py-2.5 px-3 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-600 outline-none focus:border-brand-600 transition-all">
+            <option value="">Semua Status</option>
+            <option value="ongoing" {{ request('status') === 'ongoing' ? 'selected' : '' }}>Di Lapangan</option>
+            <option value="done" {{ request('status') === 'done' ? 'selected' : '' }}>Selesai</option>
+        </select> --}}
 
         <button type="submit"
             class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[9px] transition-colors">
@@ -144,7 +152,8 @@
                         <th
                             class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
                             Foto Out</th>
-                        <x-sort-th column="work_duration_minutes" label="Durasi" :currentSort="$sort" :currentDir="$dir" />
+                        <x-sort-th column="work_duration_minutes" label="Durasi" :currentSort="$sort"
+                            :currentDir="$dir" />
                         <th
                             class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
                             Status</th>
@@ -211,6 +220,18 @@
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 <button
                                     onclick="openPhotoModal(
+            '{{ addslashes($att->store_name) }}',
+            'Foto Check-in · {{ $att->checkin_time->format('H:i, d M Y') }}',
+            '{{ Storage::url($att->checkin_photo) }}'
+        )"
+                                    class="w-8 h-8 flex items-center justify-center mx-auto rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-600 transition-colors text-base"
+                                    title="Lihat foto check-in">
+                                    🖼️
+                                </button>
+                            </td>
+                            {{-- <td class="px-4 py-3 text-center whitespace-nowrap">
+                                <button
+                                    onclick="openPhotoModal(
                                     '{{ addslashes($att->store_name) }}',
                                     'Foto Check-in · {{ $att->checkin_time->format('H:i, d M Y') }}',
                                     '{{ $att->checkin_photo }}'
@@ -219,7 +240,7 @@
                                     title="Lihat foto check-in">
                                     🖼️
                                 </button>
-                            </td>
+                            </td> --}}
 
                             {{-- Check-out --}}
                             <td class="px-4 py-3 whitespace-nowrap">
@@ -257,6 +278,22 @@
                                 @if ($att->checkout_time && $att->checkout_photo)
                                     <button
                                         onclick="openPhotoModal(
+                '{{ addslashes($att->store_name) }}',
+                'Foto Check-out · {{ $att->checkout_time->format('H:i, d M Y') }}',
+                '{{ Storage::url($att->checkout_photo) }}'
+            )"
+                                        class="w-8 h-8 flex items-center justify-center mx-auto rounded-[8px] bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-colors text-base"
+                                        title="Lihat foto check-out">
+                                        🖼️
+                                    </button>
+                                @else
+                                    <span class="text-[13px] text-slate-300 font-medium">—</span>
+                                @endif
+                            </td>
+                            {{-- <td class="px-4 py-3 text-center whitespace-nowrap">
+                                @if ($att->checkout_time && $att->checkout_photo)
+                                    <button
+                                        onclick="openPhotoModal(
                                         '{{ addslashes($att->store_name) }}',
                                         'Foto Check-out · {{ $att->checkout_time->format('H:i, d M Y') }}',
                                         '{{ $att->checkout_photo }}'
@@ -268,10 +305,31 @@
                                 @else
                                     <span class="text-[13px] text-slate-300 font-medium">—</span>
                                 @endif
-                            </td>
+                            </td> --}}
 
                             {{-- Durasi --}}
                             <td class="px-4 py-3 whitespace-nowrap">
+                                @if ($att->work_duration_minutes && !$att->is_auto_checkout)
+                                    @php
+                                        $hours = intdiv($att->work_duration_minutes, 60);
+                                        $minutes = $att->work_duration_minutes % 60;
+                                    @endphp
+                                    <span
+                                        class="inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-1 rounded-full bg-brand-50 text-brand-600">
+                                        ⏱ @if ($hours > 0)
+                                            {{ $hours }}j
+                                        @endif{{ $minutes }}m
+                                    </span>
+                                @elseif(!$att->checkout_time)
+                                    <span
+                                        class="inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-500">
+                                        ⏳ Berlangsung
+                                    </span>
+                                @else
+                                    <span class="text-[13px] text-slate-300 font-medium">—</span>
+                                @endif
+                            </td>
+                            {{-- <td class="px-4 py-3 whitespace-nowrap">
                                 @if ($att->work_duration_minutes)
                                     @php
                                         $hours = intdiv($att->work_duration_minutes, 60);
@@ -289,11 +347,16 @@
                                         ⏳ Berlangsung
                                     </span>
                                 @endif
-                            </td>
+                            </td> --}}
 
                             {{-- Status --}}
                             <td class="px-4 py-3 text-center whitespace-nowrap">
-                                @if ($att->checkout_time)
+                                @if ($att->is_auto_checkout)
+                                    <span
+                                        class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-50 text-red-500">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>Tidak Checkout
+                                    </span>
+                                @elseif ($att->checkout_time)
                                     <span
                                         class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Selesai
@@ -306,6 +369,20 @@
                                     </span>
                                 @endif
                             </td>
+                            {{-- <td class="px-4 py-3 text-center whitespace-nowrap">
+                                @if ($att->checkout_time)
+                                    <span
+                                        class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Selesai
+                                    </span>
+                                @else
+                                    <span
+                                        class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-500">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>Di
+                                        Lapangan
+                                    </span>
+                                @endif
+                            </td> --}}
                         </tr>
                     @empty
                         <tr>
