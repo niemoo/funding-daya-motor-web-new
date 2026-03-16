@@ -43,13 +43,6 @@ class AttendanceController extends Controller
                 $query->where('is_auto_checkout', true);
             }
         }
-        // if ($request->filled('status')) {
-        //     if ($request->status === 'done') {
-        //         $query->whereNotNull('checkout_time');
-        //     } elseif ($request->status === 'ongoing') {
-        //         $query->whereNull('checkout_time');
-        //     }
-        // }
 
         // Sort
         $sortable = ['attendance_date', 'checkin_time', 'store_name', 'work_duration_minutes'];
@@ -57,7 +50,7 @@ class AttendanceController extends Controller
         $dir  = $request->dir === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sort, $dir);
 
-        $attendances = $query->paginate(15)->withQueryString();
+        $attendances = $query->paginate(10)->withQueryString();
 
         // Untuk filter dropdown sales (admin only)
         $salesList = auth()->user()->isAdmin()
