@@ -202,7 +202,7 @@
                             <div class="text-[13px] font-bold text-slate-800">{{ auth()->user()->name }}</div>
                             <div class="text-[11px] text-slate-400 mt-0.5">{{ auth()->user()->role->name }}</div>
                         </div>
-                        <a href="#"
+                        <a href="{{ route('profile.show') }}"
                             class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors cursor-pointer">
                             <span class="text-[15px]">👤</span> Lihat Profile
                         </a>

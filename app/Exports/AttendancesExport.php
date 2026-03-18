@@ -63,11 +63,20 @@ class AttendancesExport implements FromQuery, WithHeadings, WithMapping, WithSty
         // Filter by status
         if (!empty($this->filters['status'])) {
             if ($this->filters['status'] === 'done') {
-                $query->whereNotNull('checkout_time');
+                $query->whereNotNull('checkout_time')->where('is_auto_checkout', false);
             } elseif ($this->filters['status'] === 'ongoing') {
                 $query->whereNull('checkout_time');
+            } elseif ($this->filters['status'] === 'auto_checkout') {
+                $query->where('is_auto_checkout', true);
             }
         }
+        // if (!empty($this->filters['status'])) {
+        //     if ($this->filters['status'] === 'done') {
+        //         $query->whereNotNull('checkout_time');
+        //     } elseif ($this->filters['status'] === 'ongoing') {
+        //         $query->whereNull('checkout_time');
+        //     }
+        // }
 
         return $query->orderBy('attendance_date', 'desc')->orderBy('checkin_time', 'desc');
     }
@@ -98,13 +107,32 @@ class AttendancesExport implements FromQuery, WithHeadings, WithMapping, WithSty
         $currentRow = $this->rowNumber + 1; // +1 karena baris 1 adalah header
 
         // Durasi
-        if ($att->work_duration_minutes) {
+        if ($att->work_duration_minutes && !$att->is_auto_checkout) {
             $hours   = intdiv($att->work_duration_minutes, 60);
             $minutes = $att->work_duration_minutes % 60;
             $durasi  = ($hours > 0 ? $hours . ' jam ' : '') . $minutes . ' menit';
-        } else {
+        } elseif (!$att->checkout_time) {
             $durasi = 'Berlangsung';
+        } else {
+            $durasi = '—';
         }
+
+        // Status
+        if ($att->is_auto_checkout) {
+            $status = 'Tidak Checkout';
+        } elseif ($att->checkout_time) {
+            $status = 'Selesai';
+        } else {
+            $status = 'Di Lapangan';
+        }
+
+        // if ($att->work_duration_minutes) {
+        //     $hours   = intdiv($att->work_duration_minutes, 60);
+        //     $minutes = $att->work_duration_minutes % 60;
+        //     $durasi  = ($hours > 0 ? $hours . ' jam ' : '') . $minutes . ' menit';
+        // } else {
+        //     $durasi = 'Berlangsung';
+        // }
 
         // URLs
         $checkinMapsUrl  = "https://www.google.com/maps?q={$att->checkin_latitude},{$att->checkin_longitude}";
@@ -137,7 +165,8 @@ class AttendancesExport implements FromQuery, WithHeadings, WithMapping, WithSty
             $checkoutMapsUrl  ? 'Lihat Lokasi ↗' : '—',
             $checkoutPhotoUrl ? 'Lihat Foto ↗'   : '—',
             $durasi,
-            $att->checkout_time ? 'Selesai' : 'Di Lapangan',
+            $status,
+            // $att->checkout_time ? 'Selesai' : 'Di Lapangan',
         ];
     }
 
@@ -221,7 +250,20 @@ class AttendancesExport implements FromQuery, WithHeadings, WithMapping, WithSty
                     $sheet->getStyle("N{$row}")->applyFromArray([
                         'font' => ['color' => ['argb' => 'FFD97706'], 'bold' => true],
                     ]);
+                } elseif ($status === 'Tidak Checkout') {
+                    $sheet->getStyle("N{$row}")->applyFromArray([
+                        'font' => ['color' => ['argb' => 'FFEF4444'], 'bold' => true],
+                    ]);
                 }
+                // if ($status === 'Selesai') {
+                //     $sheet->getStyle("N{$row}")->applyFromArray([
+                //         'font' => ['color' => ['argb' => 'FF059669'], 'bold' => true],
+                //     ]);
+                // } elseif ($status === 'Di Lapangan') {
+                //     $sheet->getStyle("N{$row}")->applyFromArray([
+                //         'font' => ['color' => ['argb' => 'FFD97706'], 'bold' => true],
+                //     ]);
+                // }
             }
 
             // ── Hyperlinks ──
