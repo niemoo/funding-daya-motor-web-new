@@ -5,11 +5,14 @@ use App\Exports\AttendanceItemTemplateExport;
 use App\Exports\AttendancesExport;
 use App\Models\Attendance;
 use App\Models\User;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AttendanceController extends Controller
 {
+    use LogsActivity;
+    
     public function index(Request $request)
     {
         $query = Attendance::with('user', 'items')
@@ -78,5 +81,132 @@ class AttendanceController extends Controller
             new AttendanceItemTemplateExport(),
             'template-input-part.xlsx'
         );
+    }
+
+    // ── Detail ────────────────────────────────────────────────────────────
+    public function show(Attendance $attendance)
+    {
+        // Sales hanya bisa lihat miliknya sendiri
+        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $attendance->load(['user', 'items']);
+
+        // Ambil semua log, kelompokkan berdasarkan created_at
+        $logs = $attendance->activityLogs()
+            ->with('user')
+            ->get()
+            ->groupBy(fn($log) => $log->created_at->format('Y-m-d H:i:s'))
+            ->map(fn($group) => [
+                'user'       => $group->first()->user,
+                'created_at' => $group->first()->created_at,
+                'changes'    => $group->map(fn($log) => [
+                    'field_name' => $log->field_name,
+                    'old_value'  => $log->oldValueDecoded(),
+                    'new_value'  => $log->newValueDecoded(),
+                    'is_items'   => $log->isItemsLog(),
+                ])->values(),
+            ])
+            ->values();
+
+        return view('attendances.show', compact('attendance', 'logs'));
+    }
+
+    // ── Edit Form ─────────────────────────────────────────────────────────
+    public function edit(Attendance $attendance)
+    {
+        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $attendance->load(['user', 'items']);
+
+        return view('attendances.edit', compact('attendance'));
+    }
+
+    // ── Update Attendance ─────────────────────────────────────────────────
+    public function update(Request $request, Attendance $attendance)
+    {
+        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'store_name'             => 'required|string|max:255',
+            'person_in_charge_name'  => 'required|string|max:255',
+            'person_in_charge_phone' => 'required|string|max:20',
+        ], [
+            'store_name.required'             => 'Nama toko wajib diisi.',
+            'person_in_charge_name.required'  => 'Nama PIC wajib diisi.',
+            'person_in_charge_phone.required' => 'Nomor telepon PIC wajib diisi.',
+        ]);
+
+        $watchedFields = ['store_name', 'person_in_charge_name', 'person_in_charge_phone'];
+
+        $oldData = $attendance->only($watchedFields);
+        $newData = $request->only($watchedFields);
+
+        // Log perubahan
+        $this->logChanges('attendance', $attendance->id, $oldData, $newData, $watchedFields);
+
+        $attendance->update($newData);
+
+        return redirect()
+            ->route('attendances.show', $attendance)
+            ->with('success', 'Data kunjungan berhasil diperbarui.');
+    }
+
+    // ── Update Items ──────────────────────────────────────────────────────
+    public function updateItems(Request $request, Attendance $attendance)
+    {
+        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'items'               => 'required|array|min:1',
+            'items.*.part_number' => 'required|string|max:100',
+            'items.*.quantity'    => 'required|integer|min:1',
+            'items.*.notes'       => 'nullable|string|max:255',
+        ], [
+            'items.required'               => 'Minimal 1 item harus diisi.',
+            'items.*.part_number.required' => 'Nomor part wajib diisi.',
+            'items.*.quantity.required'    => 'Quantity wajib diisi.',
+            'items.*.quantity.integer'     => 'Quantity harus berupa angka bulat.',
+            'items.*.quantity.min'         => 'Quantity minimal 1.',
+        ]);
+
+        // Ambil items lama untuk log
+        $oldItems = $attendance->items()
+            ->get()
+            ->map(fn($i) => [
+                'part_number' => $i->part_number,
+                'quantity'    => $i->quantity,
+                'notes'       => $i->notes,
+            ])
+            ->toArray();
+
+        // Gabungkan duplikat part_number
+        $newItems = collect($request->items)
+            ->groupBy('part_number')
+            ->map(fn($group, $partNumber) => [
+                'part_number' => $partNumber,
+                'quantity'    => $group->sum('quantity'),
+                'notes'       => $group->last()['notes'] ?? null,
+            ])
+            ->values()
+            ->toArray();
+
+        // Log perubahan items
+        $this->logItemsChange($attendance->id, $oldItems, $newItems);
+
+        // Replace items
+        $attendance->items()->delete();
+        $attendance->items()->createMany($newItems);
+
+        return redirect()
+            ->route('attendances.show', $attendance)
+            ->with('success', 'Data items berhasil diperbarui.');
     }
 }

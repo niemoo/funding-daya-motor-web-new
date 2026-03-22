@@ -9,30 +9,22 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn() => redirect()->route('dashboard'));
 
 Route::middleware(['auth'])->group(function () {
-
-    // Dashboard — semua role bisa akses
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/users/export', [UserController::class, 'export'])
-        ->name('users.export')
-        ->middleware('role:Admin');
+    // Attendance
+    Route::get('/attendances/export', [AttendanceController::class, 'export'])->name('attendances.export');
+    Route::get('/attendances/items/template', [AttendanceController::class, 'downloadItemTemplate'])->name('attendances.items.template');
+    Route::get('/attendances/{attendance}', [AttendanceController::class, 'show'])->name('attendances.show');
+    Route::get('/attendances/{attendance}/edit', [AttendanceController::class, 'edit'])->name('attendances.edit');
+    Route::put('/attendances/{attendance}', [AttendanceController::class, 'update'])->name('attendances.update');
+    Route::put('/attendances/{attendance}/items', [AttendanceController::class, 'updateItems'])->name('attendances.items.update');
+    Route::get('/attendances', [AttendanceController::class, 'index'])->name('attendances.index');
 
-    Route::resource('users', UserController::class)
-        ->middleware('role:Admin');
+    // Users
+    Route::get('/users/export', [UserController::class, 'export'])->name('users.export')->middleware('role:Admin');
+    Route::resource('users', UserController::class)->middleware('role:Admin');
 
-    // Users — Admin only
-    Route::resource('users', UserController::class)
-        ->middleware('role:Admin');
-
-    // Attendance — semua role, tapi data difilter di controller
-    Route::get('/attendances/export', [AttendanceController::class, 'export'])
-        ->name('attendances.export');
-    Route::get('/attendances', [AttendanceController::class, 'index'])
-        ->name('attendances.index');
-
-    Route::get('/attendances/items/template', [AttendanceController::class, 'downloadItemTemplate'])
-        ->name('attendances.items.template');
-
+    // Profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });

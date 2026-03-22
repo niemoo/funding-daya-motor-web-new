@@ -1,30 +1,42 @@
 <x-layouts.app title="Edit User">
 
-    <div class="max-w-xl">
-        {{-- Header --}}
-        <div class="flex items-center gap-3 mb-6">
-            <a href="{{ route('users.index') }}"
-                class="w-8 h-8 flex items-center justify-center rounded-[9px] bg-white border-[1.5px] border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors text-sm">
-                ←
-            </a>
-            <div>
-                <h1 class="text-[20px] font-extrabold text-slate-800 tracking-tight">Edit User</h1>
-                <p class="text-[13px] text-slate-400 mt-0.5">Ubah data {{ $user->name }}</p>
-            </div>
+    {{-- Header --}}
+    <div class="flex items-center gap-3 mb-6">
+        <a href="{{ route('users.index') }}"
+            class="w-8 h-8 flex items-center justify-center rounded-[9px] bg-white border-[1.5px] border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors text-sm">
+            ←
+        </a>
+        <div>
+            <h1 class="text-[20px] font-extrabold text-slate-800 tracking-tight">Edit User</h1>
+            <p class="text-[13px] text-slate-400 mt-0.5">Ubah data {{ $user->name }}</p>
         </div>
+    </div>
 
-        <div class="bg-white border border-slate-200 rounded-2xl p-6">
-            <form method="POST" action="{{ route('users.update', $user) }}" class="space-y-5">
-                @csrf
-                @method('PUT')
+    <form method="POST" action="{{ route('users.update', $user) }}">
+        @csrf
+        @method('PUT')
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+            {{-- Kolom Kiri: Info Akun --}}
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-5">
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-8 h-8 rounded-[9px] bg-brand-50 flex items-center justify-center text-sm">👤</div>
+                    <div>
+                        <div class="text-[14px] font-bold text-slate-800">Informasi Akun</div>
+                        <div class="text-[12px] text-slate-400">Data utama user</div>
+                    </div>
+                </div>
+
+                <div class="h-px bg-slate-100"></div>
 
                 {{-- Nama --}}
                 <div>
-                    <label class="block text-[13px] font-semibold text-slate-600 mb-1.5">Nama Lengkap</label>
+                    <label class="block text-[12px] font-semibold text-slate-600 mb-1.5">Nama Lengkap</label>
                     <input type="text" name="name" value="{{ old('name', $user->name) }}"
                         placeholder="Masukkan nama lengkap"
-                        class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[14px] text-slate-800 outline-none transition-all placeholder-slate-400
-                       {{ $errors->has('name') ? 'border-rose-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[13px] text-slate-800 outline-none transition-all placeholder-slate-400
+                        {{ $errors->has('name') ? 'border-rose-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
                     @error('name')
                         <p class="mt-1.5 text-[12px] text-rose-500">{{ $message }}</p>
                     @enderror
@@ -32,11 +44,11 @@
 
                 {{-- Email --}}
                 <div>
-                    <label class="block text-[13px] font-semibold text-slate-600 mb-1.5">Email Address</label>
+                    <label class="block text-[12px] font-semibold text-slate-600 mb-1.5">Email Address</label>
                     <input type="email" name="email" value="{{ old('email', $user->email) }}"
                         placeholder="nama@email.com"
-                        class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[14px] text-slate-800 outline-none transition-all placeholder-slate-400
-                       {{ $errors->has('email') ? 'border-rose-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[13px] text-slate-800 outline-none transition-all placeholder-slate-400
+                        {{ $errors->has('email') ? 'border-rose-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
                     @error('email')
                         <p class="mt-1.5 text-[12px] text-rose-500">{{ $message }}</p>
                     @enderror
@@ -44,9 +56,9 @@
 
                 {{-- Role --}}
                 <div>
-                    <label class="block text-[13px] font-semibold text-slate-600 mb-1.5">Role</label>
+                    <label class="block text-[12px] font-semibold text-slate-600 mb-1.5">Role</label>
                     <select name="role_id"
-                        class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[14px] text-slate-800 outline-none transition-all
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[13px] text-slate-800 outline-none transition-all
                         {{ $errors->has('role_id') ? 'border-rose-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
                         <option value="">— Pilih Role —</option>
                         @foreach ($roles as $role)
@@ -60,47 +72,63 @@
                         <p class="mt-1.5 text-[12px] text-rose-500">{{ $message }}</p>
                     @enderror
                 </div>
+            </div>
 
-                {{-- Divider --}}
-                <div class="border-t border-slate-100 pt-4">
-                    <p class="text-[12px] text-slate-400 mb-4">
-                        🔒 Kosongkan field password jika tidak ingin mengubah password
-                    </p>
-
-                    {{-- Password --}}
-                    <div class="mb-4">
-                        <label class="block text-[13px] font-semibold text-slate-600 mb-1.5">Password Baru</label>
-                        <input type="password" name="password" placeholder="Kosongkan jika tidak diubah"
-                            class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[14px] text-slate-800 outline-none transition-all placeholder-slate-400
-                           {{ $errors->has('password') ? 'border-rose-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
-                        @error('password')
-                            <p class="mt-1.5 text-[12px] text-rose-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Konfirmasi Password --}}
+            {{-- Kolom Kanan: Keamanan --}}
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-5">
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-8 h-8 rounded-[9px] bg-amber-50 flex items-center justify-center text-sm">🔒</div>
                     <div>
-                        <label class="block text-[13px] font-semibold text-slate-600 mb-1.5">Konfirmasi Password
-                            Baru</label>
-                        <input type="password" name="password_confirmation" placeholder="Ulangi password baru"
-                            class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[14px] text-slate-800 outline-none transition-all placeholder-slate-400 border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50">
+                        <div class="text-[14px] font-bold text-slate-800">Keamanan</div>
+                        <div class="text-[12px] text-slate-400">Kosongkan jika tidak ingin mengubah password</div>
                     </div>
                 </div>
 
-                {{-- Actions --}}
-                <div class="flex items-center gap-3 pt-2 border-t border-slate-100">
-                    <button type="submit"
-                        class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[9px] transition-colors"
-                        style="box-shadow: 0 3px 10px rgba(29,97,175,0.25)">
-                        Simpan Perubahan
-                    </button>
-                    <a href="{{ route('users.index') }}"
-                        class="px-5 py-2.5 bg-white border-[1.5px] border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-[13px] font-semibold rounded-[9px] transition-colors">
-                        Batal
-                    </a>
+                <div class="h-px bg-slate-100"></div>
+
+                {{-- Password --}}
+                <div>
+                    <label class="block text-[12px] font-semibold text-slate-600 mb-1.5">Password Baru</label>
+                    <input type="password" name="password" placeholder="Kosongkan jika tidak diubah"
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[13px] text-slate-800 outline-none transition-all placeholder-slate-400
+                        {{ $errors->has('password') ? 'border-rose-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
+                    @error('password')
+                        <p class="mt-1.5 text-[12px] text-rose-500">{{ $message }}</p>
+                    @enderror
                 </div>
-            </form>
+
+                {{-- Konfirmasi Password --}}
+                <div>
+                    <label class="block text-[12px] font-semibold text-slate-600 mb-1.5">Konfirmasi Password
+                        Baru</label>
+                    <input type="password" name="password_confirmation" placeholder="Ulangi password baru"
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[13px] text-slate-800 outline-none transition-all placeholder-slate-400 border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50">
+                </div>
+
+                {{-- Info card --}}
+                <div class="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                    <div class="flex items-start gap-2.5">
+                        <span class="text-[15px] mt-0.5">⚠️</span>
+                        <div class="text-[12px] text-amber-700 leading-relaxed">
+                            Password minimal 8 karakter. User akan diminta login ulang setelah password diubah.
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+
+        {{-- Actions --}}
+        <div class="mt-4 flex items-center gap-3">
+            <button type="submit"
+                class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[9px] transition-colors"
+                style="box-shadow: 0 3px 10px rgba(29,97,175,0.25)">
+                Simpan Perubahan
+            </button>
+            <a href="{{ route('users.index') }}"
+                class="px-5 py-2.5 bg-white border-[1.5px] border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-[13px] font-semibold rounded-[9px] transition-colors">
+                Batal
+            </a>
+        </div>
+    </form>
 
 </x-layouts.app>

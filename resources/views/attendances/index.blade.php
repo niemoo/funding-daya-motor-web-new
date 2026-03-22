@@ -160,12 +160,17 @@
                         <th
                             class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
                             Items</th>
+                        <th
+                            class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
+                            Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($attendances as $att)
                         {{-- Main Row --}}
-                        <tr class="hover:bg-brand-50/40 transition-colors border-t border-slate-50">
+                        <tr class="hover:bg-brand-50/40 transition-colors border-t border-slate-50"
+                            data-detail-url="{{ route('attendances.show', $att) }}"
+                            data-edit-url="{{ route('attendances.edit', $att) }}">
 
                             {{-- Sales --}}
                             @if (auth()->user()->isAdmin())
@@ -315,6 +320,22 @@
                                 @else
                                     <span class="text-[13px] text-slate-300">—</span>
                                 @endif
+                            </td>
+
+                            {{-- Aksi --}}
+                            {{-- Aksi --}}
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
+                                <button onclick="toggleActionMenu(event, 'menu-{{ $att->id }}')"
+                                    class="w-8 h-8 flex items-center justify-center mx-auto rounded-[7px] text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors text-xl font-bold">
+                                    ⋮
+                                </button>
+                            </td>
+
+                            {{-- Expandable row --}}
+                            <td colspan="{{ auth()->user()->isAdmin() ? 14 : 13 }}" class="px-0 py-0">
+
+                                {{-- Empty state --}}
+                            <td colspan="{{ auth()->user()->isAdmin() ? 14 : 13 }}" class="px-4 py-12 text-center">
                             </td>
                         </tr>
 
@@ -480,6 +501,64 @@
                     closeModal('maps-modal');
                 }
             });
+
+            let currentMenu = null;
+
+            function toggleActionMenu(event, menuId) {
+                event.stopPropagation();
+
+                if (currentMenu === menuId) {
+                    closeAllMenus();
+                    return;
+                }
+
+                closeAllMenus();
+
+                const btn = event.currentTarget;
+                const rect = btn.getBoundingClientRect();
+                const row = btn.closest('tr');
+                const detailUrl = row.dataset.detailUrl;
+                const editUrl = row.dataset.editUrl;
+
+                const menu = document.createElement('div');
+                menu.id = 'floating-' + menuId;
+                menu.className = 'fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden';
+                menu.style.cssText = `min-width:144px; top:${rect.bottom + 4}px; left:${rect.right - 144}px;`;
+
+                menu.innerHTML = `
+        <a href="${detailUrl}"
+            class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
+            👁️ Detail
+        </a>
+        <div class="h-px bg-slate-100"></div>
+        <a href="${editUrl}"
+            class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors font-medium">
+            ✏️ Edit
+        </a>
+    `;
+
+                document.body.appendChild(menu);
+                currentMenu = menuId;
+
+                requestAnimationFrame(() => {
+                    const mRect = menu.getBoundingClientRect();
+                    if (mRect.bottom > window.innerHeight) {
+                        menu.style.top = (rect.top - mRect.height - 4) + 'px';
+                    }
+                    if (mRect.left < 0) {
+                        menu.style.left = rect.left + 'px';
+                    }
+                });
+            }
+
+            function closeAllMenus() {
+                document.querySelectorAll('[id^="floating-menu-"]').forEach(el => el.remove());
+                currentMenu = null;
+            }
+
+            document.addEventListener('click', closeAllMenus);
+            window.addEventListener('scroll', closeAllMenus, true);
+            window.addEventListener('resize', closeAllMenus);
         </script>
     @endpush
 
