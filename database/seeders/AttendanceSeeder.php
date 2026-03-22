@@ -13,7 +13,6 @@ class AttendanceSeeder extends Seeder
         $photo = 'https://i.pinimg.com/736x/6f/4d/bb/6f4dbb317dff5f8aff6828609dcd8243.jpg';
 
         $today    = Carbon::today();
-        $tomorrow = Carbon::today()->addDay();
 
         $data = [
             // ── User 2, Hari ini, Kunjungan 1 ──

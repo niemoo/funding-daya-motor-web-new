@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AttendanceItemController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AttendanceController;
@@ -21,4 +22,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkout',          [AttendanceController::class, 'checkout']);
     Route::get('/history/daily',      [AttendanceController::class, 'dailyHistory']);
     Route::get('/statistics',         [AttendanceController::class, 'statistics']);
+
+    // Attendance Items
+    Route::get('/attendances/{attendance}/items', [AttendanceItemController::class, 'index']);
+    Route::post('/attendances/{attendance}/items', [AttendanceItemController::class, 'store']);
+    Route::post('/attendances/{attendance}/items/import', [AttendanceItemController::class, 'import']);
+    Route::get('/items/template', [AttendanceItemController::class, 'downloadTemplate']);
 });

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Exports\AttendanceItemTemplateExport;
 use App\Exports\AttendancesExport;
 use App\Models\Attendance;
 use App\Models\User;
@@ -11,7 +12,7 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Attendance::with('user')
+        $query = Attendance::with('user', 'items')
             ->when(!auth()->user()->isAdmin(), fn($q) => $q->where('user_id', auth()->id()));
 
         // Search
@@ -69,5 +70,13 @@ class AttendanceController extends Controller
         $filename = 'absensi-' . now()->format('d-m-Y') . '.xlsx';
 
         return Excel::download(new AttendancesExport($filters), $filename);
+    }
+
+    public function downloadItemTemplate()
+    {
+        return Excel::download(
+            new AttendanceItemTemplateExport(),
+            'template-input-part.xlsx'
+        );
     }
 }

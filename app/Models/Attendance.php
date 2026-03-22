@@ -38,4 +38,16 @@ class Attendance extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function items()
+    {
+        return $this->hasMany(AttendanceItem::class);
+    }
+
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class, 'model_id')
+            ->whereIn('model_type', ['attendance', 'attendance_items'])
+            ->latest('created_at');
+    }
 }

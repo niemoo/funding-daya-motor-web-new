@@ -35,11 +35,9 @@
                     ✕
                 </button>
             </div>
-            <div class="p-0">
-                <iframe id="maps-iframe" src="" width="100%" height="400" style="border:0;"
-                    allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
-                </iframe>
-            </div>
+            <iframe id="maps-iframe" src="" width="100%" height="380" style="border:0;" allowfullscreen=""
+                loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
             <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
                 <div id="maps-coords" class="text-[12px] text-slate-400 font-mono"></div>
                 <a id="maps-external-link" href="#" target="_blank"
@@ -56,12 +54,12 @@
             <h1 class="text-[20px] font-extrabold text-slate-800 tracking-tight">Data Absensi</h1>
             <p class="text-[13px] text-slate-400 mt-1">Total {{ $attendances->total() }} kunjungan tercatat</p>
         </div>
-        <div class="flex items-center gap-2 flex-shrink-0">
-            {{-- Export akan ditambahkan nanti --}}
-            <button disabled
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-400 text-[13px] font-semibold rounded-[10px] cursor-not-allowed">
+        <div class="flex-shrink-0">
+            <a href="{{ route('attendances.export', request()->query()) }}"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[13px] font-semibold rounded-[10px] transition-all"
+                style="box-shadow: 0 3px 10px rgba(5,150,105,0.25)">
                 📥 Export Excel
-            </button>
+            </a>
         </div>
     </div>
 
@@ -73,13 +71,13 @@
         @endif
 
         {{-- Search --}}
-        <div class="relative flex-1 min-w-[200px] max-w-[260px]">
+        <div class="relative flex-1 min-w-[180px] max-w-[240px]">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[13px]">🔍</span>
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari sales, toko, PIC..."
                 class="w-full pl-8 pr-3 py-2.5 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-700 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-50 transition-all placeholder-slate-400">
         </div>
 
-        {{-- Filter Sales (admin only) --}}
+        {{-- Filter Sales --}}
         @if (auth()->user()->isAdmin())
             <select name="user_id"
                 class="py-2.5 px-3 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-600 outline-none focus:border-brand-600 transition-all">
@@ -102,7 +100,10 @@
             <option value="">Semua Status</option>
             <option value="ongoing" {{ request('status') === 'ongoing' ? 'selected' : '' }}>Di Lapangan</option>
             <option value="done" {{ request('status') === 'done' ? 'selected' : '' }}>Selesai</option>
+            <option value="auto_checkout" {{ request('status') === 'auto_checkout' ? 'selected' : '' }}>Tidak Checkout
+            </option>
         </select>
+
 
         <button type="submit"
             class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[9px] transition-colors">
@@ -120,7 +121,7 @@
     {{-- Table --}}
     <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full" style="min-width: 1100px">
+            <table class="w-full" style="min-width:1200px">
                 <thead>
                     <tr>
                         @if (auth()->user()->isAdmin())
@@ -133,27 +134,35 @@
                         <x-sort-th column="checkin_time" label="Check-in" :currentSort="$sort" :currentDir="$dir" />
                         <th
                             class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
+                            Lokasi In</th>
+                        <th
+                            class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
                             Foto In</th>
                         <th
                             class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-left bg-slate-50 border-b border-slate-100 whitespace-nowrap">
                             Check-out</th>
                         <th
                             class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
-                            Foto Out</th>
-                        <x-sort-th column="work_duration_minutes" label="Durasi" :currentSort="$sort" :currentDir="$dir" />
+                            Lokasi Out</th>
                         <th
                             class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
-                            Lokasi</th>
+                            Foto Out</th>
+                        <x-sort-th column="work_duration_minutes" label="Durasi" :currentSort="$sort"
+                            :currentDir="$dir" />
                         <th
                             class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
                             Status</th>
+                        <th
+                            class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
+                            Items
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
                     @forelse($attendances as $att)
                         <tr class="hover:bg-brand-50/40 transition-colors">
 
-                            {{-- Sales (admin only) --}}
+                            {{-- Sales --}}
                             @if (auth()->user()->isAdmin())
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
@@ -178,31 +187,42 @@
                             {{-- Tanggal --}}
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="text-[13px] font-semibold text-slate-800">
-                                    {{ $att->attendance_date->format('d M Y') }}
-                                </div>
+                                    {{ $att->attendance_date->format('d M Y') }}</div>
                                 <div class="text-[11px] text-slate-400">
-                                    {{ $att->attendance_date->locale('id')->isoFormat('dddd') }}
-                                </div>
+                                    {{ $att->attendance_date->locale('id')->isoFormat('dddd') }}</div>
                             </td>
 
                             {{-- Check-in --}}
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="text-[13px] font-bold text-slate-800">
-                                    {{ $att->checkin_time->format('H:i') }}
-                                </div>
+                                    {{ $att->checkin_time->format('H:i') }}</div>
                                 <div class="text-[11px] text-slate-400 font-mono">
-                                    {{ $att->checkin_time->format('d/m/Y') }}
-                                </div>
+                                    {{ $att->checkin_time->format('d/m/Y') }}</div>
+                            </td>
+
+                            {{-- Lokasi Check-in --}}
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
+                                <button
+                                    onclick="openMapsModal(
+                                    '{{ addslashes($att->store_name) }}',
+                                    'Check-in · {{ $att->checkin_time->format('H:i, d M Y') }}',
+                                    '{{ $att->checkin_latitude }}',
+                                    '{{ $att->checkin_longitude }}'
+                                )"
+                                    class="w-8 h-8 flex items-center justify-center mx-auto rounded-[8px] bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors text-base"
+                                    title="Lihat lokasi check-in">
+                                    📍
+                                </button>
                             </td>
 
                             {{-- Foto Check-in --}}
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 <button
                                     onclick="openPhotoModal(
-                                    '{{ addslashes($att->store_name) }}',
-                                    'Foto Check-in · {{ $att->checkin_time->format('H:i, d M Y') }}',
-                                    '{{ asset($att->checkin_photo) }}'
-                                )"
+            '{{ addslashes($att->store_name) }}',
+            'Foto Check-in · {{ $att->checkin_time->format('H:i, d M Y') }}',
+            '{{ Storage::url($att->checkin_photo) }}'
+        )"
                                     class="w-8 h-8 flex items-center justify-center mx-auto rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-600 transition-colors text-base"
                                     title="Lihat foto check-in">
                                     🖼️
@@ -213,13 +233,30 @@
                             <td class="px-4 py-3 whitespace-nowrap">
                                 @if ($att->checkout_time)
                                     <div class="text-[13px] font-bold text-slate-800">
-                                        {{ $att->checkout_time->format('H:i') }}
-                                    </div>
+                                        {{ $att->checkout_time->format('H:i') }}</div>
                                     <div class="text-[11px] text-slate-400 font-mono">
-                                        {{ $att->checkout_time->format('d/m/Y') }}
-                                    </div>
+                                        {{ $att->checkout_time->format('d/m/Y') }}</div>
                                 @else
-                                    <span class="text-slate-300 text-[13px]">—</span>
+                                    <span class="text-[13px] text-slate-300 font-medium">—</span>
+                                @endif
+                            </td>
+
+                            {{-- Lokasi Check-out --}}
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
+                                @if ($att->checkout_time && $att->checkout_latitude)
+                                    <button
+                                        onclick="openMapsModal(
+                                        '{{ addslashes($att->store_name) }}',
+                                        'Check-out · {{ $att->checkout_time->format('H:i, d M Y') }}',
+                                        '{{ $att->checkout_latitude }}',
+                                        '{{ $att->checkout_longitude }}'
+                                    )"
+                                        class="w-8 h-8 flex items-center justify-center mx-auto rounded-[8px] bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors text-base"
+                                        title="Lihat lokasi check-out">
+                                        📍
+                                    </button>
+                                @else
+                                    <span class="text-[13px] text-slate-300 font-medium">—</span>
                                 @endif
                             </td>
 
@@ -228,59 +265,50 @@
                                 @if ($att->checkout_time && $att->checkout_photo)
                                     <button
                                         onclick="openPhotoModal(
-                                    '{{ addslashes($att->store_name) }}',
-                                    'Foto Check-out · {{ $att->checkout_time->format('H:i, d M Y') }}',
-                                    '{{ asset($att->checkout_photo) }}'
-                                )"
+                '{{ addslashes($att->store_name) }}',
+                'Foto Check-out · {{ $att->checkout_time->format('H:i, d M Y') }}',
+                '{{ Storage::url($att->checkout_photo) }}'
+            )"
                                         class="w-8 h-8 flex items-center justify-center mx-auto rounded-[8px] bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-colors text-base"
                                         title="Lihat foto check-out">
                                         🖼️
                                     </button>
                                 @else
-                                    <span class="text-slate-200 text-lg">🖼️</span>
+                                    <span class="text-[13px] text-slate-300 font-medium">—</span>
                                 @endif
                             </td>
 
                             {{-- Durasi --}}
                             <td class="px-4 py-3 whitespace-nowrap">
-                                @if ($att->work_duration_minutes)
+                                @if ($att->work_duration_minutes && !$att->is_auto_checkout)
                                     @php
                                         $hours = intdiv($att->work_duration_minutes, 60);
                                         $minutes = $att->work_duration_minutes % 60;
                                     @endphp
                                     <span
                                         class="inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-1 rounded-full bg-brand-50 text-brand-600">
-                                        ⏱
-                                        @if ($hours > 0)
+                                        ⏱ @if ($hours > 0)
                                             {{ $hours }}j
                                         @endif{{ $minutes }}m
                                     </span>
-                                @else
+                                @elseif(!$att->checkout_time)
                                     <span
                                         class="inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-500">
                                         ⏳ Berlangsung
                                     </span>
+                                @else
+                                    <span class="text-[13px] text-slate-300 font-medium">—</span>
                                 @endif
-                            </td>
-
-                            {{-- Lokasi --}}
-                            <td class="px-4 py-3 text-center whitespace-nowrap">
-                                <button
-                                    onclick="openMapsModal(
-                                    '{{ addslashes($att->store_name) }}',
-                                    'Check-in · {{ $att->checkin_time->format('H:i, d M Y') }}',
-                                    '{{ $att->checkin_latitude }}',
-                                    '{{ $att->checkin_longitude }}'
-                                )"
-                                    class="w-8 h-8 flex items-center justify-center mx-auto rounded-[8px] bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors text-base"
-                                    title="Lihat lokasi">
-                                    📍
-                                </button>
                             </td>
 
                             {{-- Status --}}
                             <td class="px-4 py-3 text-center whitespace-nowrap">
-                                @if ($att->checkout_time)
+                                @if ($att->is_auto_checkout)
+                                    <span
+                                        class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-50 text-red-500">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>Tidak Checkout
+                                    </span>
+                                @elseif ($att->checkout_time)
                                     <span
                                         class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Selesai
@@ -296,10 +324,10 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()->isAdmin() ? 10 : 9 }}" class="px-4 py-12 text-center">
+                            <td colspan="{{ auth()->user()->isAdmin() ? 11 : 10 }}" class="px-4 py-12 text-center">
                                 <div class="text-2xl mb-2">📋</div>
                                 <div class="text-[14px] font-semibold text-slate-500">Tidak ada data absensi</div>
-                                {{-- <div class="text-[12px] text-slate-400 mt-1">Coba ubah filter pencarian</div> --}}
+                                <div class="text-[12px] text-slate-400 mt-1">Coba ubah filter pencarian</div>
                             </td>
                         </tr>
                     @endforelse
@@ -315,6 +343,7 @@
                     {{ $attendances->total() }} data
                 </div>
                 <div class="flex items-center gap-1.5">
+                    {{-- Prev --}}
                     @if ($attendances->onFirstPage())
                         <span
                             class="w-8 h-8 flex items-center justify-center rounded-[7px] border-[1.5px] border-slate-200 text-slate-300 text-[13px]">‹</span>
@@ -323,6 +352,7 @@
                             class="w-8 h-8 flex items-center justify-center rounded-[7px] border-[1.5px] border-slate-200 text-slate-500 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 text-[13px] transition-colors">‹</a>
                     @endif
 
+                    {{-- Pages --}}
                     @foreach ($attendances->getUrlRange(1, $attendances->lastPage()) as $page => $url)
                         @if ($page == $attendances->currentPage())
                             <span
@@ -333,6 +363,7 @@
                         @endif
                     @endforeach
 
+                    {{-- Next --}}
                     @if ($attendances->hasMorePages())
                         <a href="{{ $attendances->nextPageUrl() }}"
                             class="w-8 h-8 flex items-center justify-center rounded-[7px] border-[1.5px] border-slate-200 text-slate-500 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 text-[13px] transition-colors">›</a>
@@ -347,7 +378,6 @@
 
     @push('scripts')
         <script>
-            // ── Photo Modal ──
             function openPhotoModal(title, sub, imgSrc) {
                 document.getElementById('photo-modal-title').textContent = title;
                 document.getElementById('photo-modal-sub').textContent = sub;
@@ -355,20 +385,16 @@
                 openModal('photo-modal');
             }
 
-            // ── Maps Modal ──
             function openMapsModal(title, sub, lat, lng) {
                 document.getElementById('maps-modal-title').textContent = title;
                 document.getElementById('maps-modal-sub').textContent = sub;
                 document.getElementById('maps-coords').textContent = lat + ', ' + lng;
-
-                const embedUrl = `https://www.google.com/maps?q=${lat},${lng}&hl=id&z=17&output=embed`;
-                const externalUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-                document.getElementById('maps-iframe').src = embedUrl;
-                document.getElementById('maps-external-link').href = externalUrl;
+                document.getElementById('maps-iframe').src =
+                    `https://www.google.com/maps?q=${lat},${lng}&hl=id&z=17&output=embed`;
+                document.getElementById('maps-external-link').href = `https://www.google.com/maps?q=${lat},${lng}`;
                 openModal('maps-modal');
             }
 
-            // ── Modal helpers ──
             function openModal(id) {
                 const modal = document.getElementById(id);
                 modal.classList.remove('hidden');
@@ -381,21 +407,18 @@
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
                 document.body.style.overflow = '';
-                // Reset iframe supaya maps tidak terus loading di background
                 if (id === 'maps-modal') {
                     document.getElementById('maps-iframe').src = '';
                 }
             }
 
-            // Close on backdrop click
             ['photo-modal', 'maps-modal'].forEach(id => {
                 document.getElementById(id).addEventListener('click', function(e) {
                     if (e.target === this) closeModal(id);
                 });
             });
 
-            // Close on ESC
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', e => {
                 if (e.key === 'Escape') {
                     closeModal('photo-modal');
                     closeModal('maps-modal');

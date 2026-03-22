@@ -54,7 +54,13 @@
             <h1 class="text-[20px] font-extrabold text-slate-800 tracking-tight">Data Absensi</h1>
             <p class="text-[13px] text-slate-400 mt-1">Total {{ $attendances->total() }} kunjungan tercatat</p>
         </div>
-        <div class="flex-shrink-0">
+        <div class="flex-shrink-0 flex items-center gap-2">
+            {{-- Template Excel (disabled) --}}
+            <a href="{{ route('attendances.items.template') }}"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-[1.5px] border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] font-semibold rounded-[10px] transition-all">
+                📄 Template Excel
+            </a>
+            {{-- Export --}}
             <a href="{{ route('attendances.export', request()->query()) }}"
                 class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[13px] font-semibold rounded-[10px] transition-all"
                 style="box-shadow: 0 3px 10px rgba(5,150,105,0.25)">
@@ -104,7 +110,6 @@
             </option>
         </select>
 
-
         <button type="submit"
             class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[9px] transition-colors">
             Filter
@@ -121,7 +126,7 @@
     {{-- Table --}}
     <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full" style="min-width:1200px">
+            <table class="w-full" style="min-width:1300px">
                 <thead>
                     <tr>
                         @if (auth()->user()->isAdmin())
@@ -152,11 +157,15 @@
                         <th
                             class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
                             Status</th>
+                        <th
+                            class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100 whitespace-nowrap">
+                            Items</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody>
                     @forelse($attendances as $att)
-                        <tr class="hover:bg-brand-50/40 transition-colors">
+                        {{-- Main Row --}}
+                        <tr class="hover:bg-brand-50/40 transition-colors border-t border-slate-50">
 
                             {{-- Sales --}}
                             @if (auth()->user()->isAdmin())
@@ -199,29 +208,18 @@
                             {{-- Lokasi Check-in --}}
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 <button
-                                    onclick="openMapsModal(
-                                    '{{ addslashes($att->store_name) }}',
-                                    'Check-in · {{ $att->checkin_time->format('H:i, d M Y') }}',
-                                    '{{ $att->checkin_latitude }}',
-                                    '{{ $att->checkin_longitude }}'
-                                )"
+                                    onclick="openMapsModal('{{ addslashes($att->store_name) }}','Check-in · {{ $att->checkin_time->format('H:i, d M Y') }}','{{ $att->checkin_latitude }}','{{ $att->checkin_longitude }}')"
                                     class="w-8 h-8 flex items-center justify-center mx-auto rounded-[8px] bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors text-base"
-                                    title="Lihat lokasi check-in">
-                                    📍
+                                    title="Lihat lokasi check-in">📍
                                 </button>
                             </td>
 
                             {{-- Foto Check-in --}}
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 <button
-                                    onclick="openPhotoModal(
-            '{{ addslashes($att->store_name) }}',
-            'Foto Check-in · {{ $att->checkin_time->format('H:i, d M Y') }}',
-            '{{ Storage::url($att->checkin_photo) }}'
-        )"
+                                    onclick="openPhotoModal('{{ addslashes($att->store_name) }}','Foto Check-in · {{ $att->checkin_time->format('H:i, d M Y') }}','{{ Storage::url($att->checkin_photo) }}')"
                                     class="w-8 h-8 flex items-center justify-center mx-auto rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-600 transition-colors text-base"
-                                    title="Lihat foto check-in">
-                                    🖼️
+                                    title="Lihat foto check-in">🖼️
                                 </button>
                             </td>
 
@@ -241,15 +239,9 @@
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 @if ($att->checkout_time && $att->checkout_latitude)
                                     <button
-                                        onclick="openMapsModal(
-                                        '{{ addslashes($att->store_name) }}',
-                                        'Check-out · {{ $att->checkout_time->format('H:i, d M Y') }}',
-                                        '{{ $att->checkout_latitude }}',
-                                        '{{ $att->checkout_longitude }}'
-                                    )"
+                                        onclick="openMapsModal('{{ addslashes($att->store_name) }}','Check-out · {{ $att->checkout_time->format('H:i, d M Y') }}','{{ $att->checkout_latitude }}','{{ $att->checkout_longitude }}')"
                                         class="w-8 h-8 flex items-center justify-center mx-auto rounded-[8px] bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors text-base"
-                                        title="Lihat lokasi check-out">
-                                        📍
+                                        title="Lihat lokasi check-out">📍
                                     </button>
                                 @else
                                     <span class="text-[13px] text-slate-300 font-medium">—</span>
@@ -260,14 +252,9 @@
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 @if ($att->checkout_time && $att->checkout_photo)
                                     <button
-                                        onclick="openPhotoModal(
-                '{{ addslashes($att->store_name) }}',
-                'Foto Check-out · {{ $att->checkout_time->format('H:i, d M Y') }}',
-                '{{ Storage::url($att->checkout_photo) }}'
-            )"
+                                        onclick="openPhotoModal('{{ addslashes($att->store_name) }}','Foto Check-out · {{ $att->checkout_time->format('H:i, d M Y') }}','{{ Storage::url($att->checkout_photo) }}')"
                                         class="w-8 h-8 flex items-center justify-center mx-auto rounded-[8px] bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-colors text-base"
-                                        title="Lihat foto check-out">
-                                        🖼️
+                                        title="Lihat foto check-out">🖼️
                                     </button>
                                 @else
                                     <span class="text-[13px] text-slate-300 font-medium">—</span>
@@ -317,10 +304,81 @@
                                     </span>
                                 @endif
                             </td>
+
+                            {{-- Items --}}
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
+                                @if ($att->items->count() > 0)
+                                    <button onclick="toggleItems({{ $att->id }})"
+                                        class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100 transition-colors">
+                                        📦 {{ $att->items->count() }} part
+                                    </button>
+                                @else
+                                    <span class="text-[13px] text-slate-300">—</span>
+                                @endif
+                            </td>
                         </tr>
+
+                        {{-- Expandable Items Row --}}
+                        @if ($att->items->count() > 0)
+                            <tr id="items-{{ $att->id }}" class="hidden">
+                                <td colspan="{{ auth()->user()->isAdmin() ? 12 : 11 }}" class="px-0 py-0">
+                                    <div class="px-6 py-4 bg-brand-50/40 border-t border-brand-100">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <span class="text-[12px] font-bold text-brand-600 uppercase tracking-wide">
+                                                📦 Daftar Part — {{ $att->store_name }}
+                                            </span>
+                                            <span
+                                                class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-brand-100 text-brand-600">
+                                                {{ $att->items->count() }} item · Total qty:
+                                                {{ $att->items->sum('quantity') }}
+                                            </span>
+                                        </div>
+                                        <div
+                                            class="bg-white rounded-xl border border-brand-100 overflow-hidden max-w-2xl">
+                                            <table class="w-full">
+                                                <thead>
+                                                    <tr class="bg-slate-50 border-b border-slate-100">
+                                                        <th
+                                                            class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-2.5 text-left w-10">
+                                                            No</th>
+                                                        <th
+                                                            class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-2.5 text-left">
+                                                            Nomor Part</th>
+                                                        <th
+                                                            class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-2.5 text-center w-20">
+                                                            Qty</th>
+                                                        <th
+                                                            class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-2.5 text-left">
+                                                            Catatan</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-slate-50">
+                                                    @foreach ($att->items as $i => $item)
+                                                        <tr class="hover:bg-brand-50/30 transition-colors">
+                                                            <td class="px-4 py-2.5 text-[12px] text-slate-400">
+                                                                {{ $i + 1 }}</td>
+                                                            <td
+                                                                class="px-4 py-2.5 text-[13px] font-semibold text-slate-800 font-mono">
+                                                                {{ $item->part_number }}</td>
+                                                            <td class="px-4 py-2.5 text-center">
+                                                                <span
+                                                                    class="text-[13px] font-bold text-brand-600">{{ $item->quantity }}</span>
+                                                            </td>
+                                                            <td class="px-4 py-2.5 text-[12px] text-slate-500">
+                                                                {{ $item->notes ?? '—' }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
+
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()->isAdmin() ? 11 : 10 }}" class="px-4 py-12 text-center">
+                            <td colspan="{{ auth()->user()->isAdmin() ? 12 : 11 }}" class="px-4 py-12 text-center">
                                 <div class="text-2xl mb-2">📋</div>
                                 <div class="text-[14px] font-semibold text-slate-500">Tidak ada data absensi</div>
                                 <div class="text-[12px] text-slate-400 mt-1">Coba ubah filter pencarian</div>
@@ -339,7 +397,6 @@
                     {{ $attendances->total() }} data
                 </div>
                 <div class="flex items-center gap-1.5">
-                    {{-- Prev --}}
                     @if ($attendances->onFirstPage())
                         <span
                             class="w-8 h-8 flex items-center justify-center rounded-[7px] border-[1.5px] border-slate-200 text-slate-300 text-[13px]">‹</span>
@@ -348,7 +405,6 @@
                             class="w-8 h-8 flex items-center justify-center rounded-[7px] border-[1.5px] border-slate-200 text-slate-500 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 text-[13px] transition-colors">‹</a>
                     @endif
 
-                    {{-- Pages --}}
                     @foreach ($attendances->getUrlRange(1, $attendances->lastPage()) as $page => $url)
                         @if ($page == $attendances->currentPage())
                             <span
@@ -359,7 +415,6 @@
                         @endif
                     @endforeach
 
-                    {{-- Next --}}
                     @if ($attendances->hasMorePages())
                         <a href="{{ $attendances->nextPageUrl() }}"
                             class="w-8 h-8 flex items-center justify-center rounded-[7px] border-[1.5px] border-slate-200 text-slate-500 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 text-[13px] transition-colors">›</a>
@@ -374,6 +429,11 @@
 
     @push('scripts')
         <script>
+            function toggleItems(id) {
+                const row = document.getElementById('items-' + id);
+                row.classList.toggle('hidden');
+            }
+
             function openPhotoModal(title, sub, imgSrc) {
                 document.getElementById('photo-modal-title').textContent = title;
                 document.getElementById('photo-modal-sub').textContent = sub;
