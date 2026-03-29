@@ -3,26 +3,59 @@
 namespace App\Imports;
 
 use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithStartRow;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Illuminate\Support\Collection;
 
-class AttendanceItemsImport implements ToCollection, WithHeadingRow
+class AttendanceItemsImport implements WithMultipleSheets
 {
-    protected array $validItems = [];
-    protected array $warnings   = [];
+    protected AttendanceItemsSheetImport $sheet;
+
+    public function __construct()
+    {
+        $this->sheet = new AttendanceItemsSheetImport();
+    }
+
+    public function sheets(): array
+    {
+        return [
+            0 => $this->sheet,
+        ];
+    }
+
+    public function getValidItems(): array
+    {
+        return $this->sheet->validItems;
+    }
+
+    public function getWarnings(): array
+    {
+        return $this->sheet->warnings;
+    }
+}
+
+class AttendanceItemsSheetImport implements ToCollection, WithStartRow
+{
+    public array $validItems = [];
+    public array $warnings   = [];
+
+    public function startRow(): int
+    {
+        return 2;
+    }
 
     public function collection(Collection $rows)
     {
         $merged = [];
 
         foreach ($rows as $index => $row) {
-            $rowNum     = $index + 2; // +2 karena baris 1 header
-            $partNumber = trim($row['nomor_part'] ?? '');
-            $quantity   = $row['quantity'] ?? null;
-            $notes      = trim($row['catatan'] ?? '') ?: null;
+            $rowNum     = $index + 2;
+            $partNumber = trim((string) ($row[1] ?? ''));
+            $quantity   = $row[2] ?? null;
+            $notes      = trim((string) ($row[3] ?? '')) ?: null;
 
             // Skip baris kosong
-            if (empty($partNumber) && empty($quantity)) continue;
+            if (empty($partNumber) && $quantity === null) continue;
 
             // Validasi part_number
             if (empty($partNumber)) {
@@ -49,15 +82,5 @@ class AttendanceItemsImport implements ToCollection, WithHeadingRow
         }
 
         $this->validItems = array_values($merged);
-    }
-
-    public function getValidItems(): array
-    {
-        return $this->validItems;
-    }
-
-    public function getWarnings(): array
-    {
-        return $this->warnings;
     }
 }

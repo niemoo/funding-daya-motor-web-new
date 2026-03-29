@@ -55,12 +55,10 @@
             <p class="text-[13px] text-slate-400 mt-1">Total {{ $attendances->total() }} kunjungan tercatat</p>
         </div>
         <div class="flex-shrink-0 flex items-center gap-2">
-            {{-- Template Excel (disabled) --}}
             <a href="{{ route('attendances.items.template') }}"
                 class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-[1.5px] border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] font-semibold rounded-[10px] transition-all">
                 📄 Template Excel
             </a>
-            {{-- Export --}}
             <a href="{{ route('attendances.export', request()->query()) }}"
                 class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[13px] font-semibold rounded-[10px] transition-all"
                 style="box-shadow: 0 3px 10px rgba(5,150,105,0.25)">
@@ -75,15 +73,11 @@
             <input type="hidden" name="sort" value="{{ request('sort') }}">
             <input type="hidden" name="dir" value="{{ request('dir') }}">
         @endif
-
-        {{-- Search --}}
         <div class="relative flex-1 min-w-[180px] max-w-[240px]">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[13px]">🔍</span>
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari sales, toko, PIC..."
                 class="w-full pl-8 pr-3 py-2.5 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-700 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-50 transition-all placeholder-slate-400">
         </div>
-
-        {{-- Filter Sales --}}
         @if (auth()->user()->isAdmin())
             <select name="user_id"
                 class="py-2.5 px-3 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-600 outline-none focus:border-brand-600 transition-all">
@@ -95,12 +89,8 @@
                 @endforeach
             </select>
         @endif
-
-        {{-- Filter Date --}}
         <input type="date" name="date" value="{{ request('date') }}"
             class="py-2.5 px-3 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-600 outline-none focus:border-brand-600 transition-all">
-
-        {{-- Filter Status --}}
         <select name="status"
             class="py-2.5 px-3 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-600 outline-none focus:border-brand-600 transition-all">
             <option value="">Semua Status</option>
@@ -109,12 +99,10 @@
             <option value="auto_checkout" {{ request('status') === 'auto_checkout' ? 'selected' : '' }}>Tidak Checkout
             </option>
         </select>
-
         <button type="submit"
             class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[9px] transition-colors">
             Filter
         </button>
-
         @if (request()->anyFilled(['search', 'user_id', 'date', 'status']))
             <a href="{{ route('attendances.index') }}"
                 class="px-4 py-2.5 bg-white border-[1.5px] border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-[13px] font-semibold rounded-[9px] transition-colors">
@@ -167,7 +155,8 @@
                 </thead>
                 <tbody>
                     @forelse($attendances as $att)
-                        {{-- Main Row --}}
+
+                        {{-- ── Main Row ── --}}
                         <tr class="hover:bg-brand-50/40 transition-colors border-t border-slate-50"
                             data-detail-url="{{ route('attendances.show', $att) }}"
                             data-edit-url="{{ route('attendances.edit', $att) }}">
@@ -323,26 +312,19 @@
                             </td>
 
                             {{-- Aksi --}}
-                            {{-- Aksi --}}
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 <button onclick="toggleActionMenu(event, 'menu-{{ $att->id }}')"
                                     class="w-8 h-8 flex items-center justify-center mx-auto rounded-[7px] text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors text-xl font-bold">
                                     ⋮
                                 </button>
                             </td>
-
-                            {{-- Expandable row --}}
-                            <td colspan="{{ auth()->user()->isAdmin() ? 14 : 13 }}" class="px-0 py-0">
-
-                                {{-- Empty state --}}
-                            <td colspan="{{ auth()->user()->isAdmin() ? 14 : 13 }}" class="px-4 py-12 text-center">
-                            </td>
                         </tr>
+                        {{-- ── END Main Row ── --}}
 
-                        {{-- Expandable Items Row --}}
+                        {{-- ── Expandable Items Row ── --}}
                         @if ($att->items->count() > 0)
                             <tr id="items-{{ $att->id }}" class="hidden">
-                                <td colspan="{{ auth()->user()->isAdmin() ? 12 : 11 }}" class="px-0 py-0">
+                                <td colspan="{{ auth()->user()->isAdmin() ? 13 : 12 }}" class="px-0 py-0">
                                     <div class="px-6 py-4 bg-brand-50/40 border-t border-brand-100">
                                         <div class="flex items-center gap-2 mb-3">
                                             <span class="text-[12px] font-bold text-brand-600 uppercase tracking-wide">
@@ -396,10 +378,11 @@
                                 </td>
                             </tr>
                         @endif
+                        {{-- ── END Expandable Items Row ── --}}
 
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()->isAdmin() ? 12 : 11 }}" class="px-4 py-12 text-center">
+                            <td colspan="{{ auth()->user()->isAdmin() ? 13 : 12 }}" class="px-4 py-12 text-center">
                                 <div class="text-2xl mb-2">📋</div>
                                 <div class="text-[14px] font-semibold text-slate-500">Tidak ada data absensi</div>
                                 <div class="text-[12px] text-slate-400 mt-1">Coba ubah filter pencarian</div>
@@ -502,6 +485,7 @@
                 }
             });
 
+            // ── Action Menu ──────────────────────────────────────────────
             let currentMenu = null;
 
             function toggleActionMenu(event, menuId) {
@@ -526,16 +510,16 @@
                 menu.style.cssText = `min-width:144px; top:${rect.bottom + 4}px; left:${rect.right - 144}px;`;
 
                 menu.innerHTML = `
-        <a href="${detailUrl}"
-            class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
-            👁️ Detail
-        </a>
-        <div class="h-px bg-slate-100"></div>
-        <a href="${editUrl}"
-            class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors font-medium">
-            ✏️ Edit
-        </a>
-    `;
+                    <a href="${detailUrl}"
+                        class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
+                        👁️ Detail
+                    </a>
+                    <div class="h-px bg-slate-100"></div>
+                    <a href="${editUrl}"
+                        class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors font-medium">
+                        ✏️ Edit
+                    </a>
+                `;
 
                 document.body.appendChild(menu);
                 currentMenu = menuId;

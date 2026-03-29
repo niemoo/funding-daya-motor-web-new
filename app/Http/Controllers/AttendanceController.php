@@ -209,4 +209,82 @@ class AttendanceController extends Controller
             ->route('attendances.show', $attendance)
             ->with('success', 'Data items berhasil diperbarui.');
     }
+
+    // ── Import Preview (AJAX) ─────────────────────────────────────────────────
+    public function importItemsPreview(Request $request, Attendance $attendance)
+    {
+        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls|max:5120',
+        ], [
+            'file.required' => 'File Excel wajib diupload.',
+            'file.mimes'    => 'File harus berformat xlsx atau xls.',
+            'file.max'      => 'Ukuran file maksimal 5MB.',
+        ]);
+
+        $import = new \App\Imports\AttendanceItemsImport();
+        \Maatwebsite\Excel\Facades\Excel::import($import, $request->file('file'));
+
+        $validItems = $import->getValidItems();
+        $warnings   = $import->getWarnings();
+
+        if (empty($validItems)) {
+            return response()->json([
+                'success'  => false,
+                'message'  => 'Tidak ada data valid yang dapat diimport.',
+                'warnings' => $warnings,
+            ], 422);
+        }
+
+        return response()->json([
+            'success'  => true,
+            'items'    => $validItems,
+            'warnings' => $warnings,
+            'total'    => count($validItems),
+            'total_qty'=> array_sum(array_column($validItems, 'quantity')),
+        ]);
+    }
+
+    // ── Import Confirm (AJAX) ─────────────────────────────────────────────────
+    public function importItemsConfirm(Request $request, Attendance $attendance)
+    {
+        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'items'               => 'required|array|min:1',
+            'items.*.part_number' => 'required|string|max:100',
+            'items.*.quantity'    => 'required|integer|min:1',
+            'items.*.notes'       => 'nullable|string|max:255',
+        ]);
+
+        // Ambil items lama untuk log
+        $oldItems = $attendance->items()
+            ->get()
+            ->map(fn($i) => [
+                'part_number' => $i->part_number,
+                'quantity'    => $i->quantity,
+                'notes'       => $i->notes,
+            ])
+            ->toArray();
+
+        $newItems = $request->items;
+
+        // Log perubahan
+        $this->logItemsChange($attendance->id, $oldItems, $newItems);
+
+        // Replace
+        $attendance->items()->delete();
+        $attendance->items()->createMany($newItems);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Import berhasil. ' . count($newItems) . ' part tersimpan.',
+            'redirect'=> route('attendances.show', $attendance),
+        ]);
+    }
 }
