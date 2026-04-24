@@ -123,7 +123,7 @@
                         </div>
                         <div class="min-w-0">
                             <div class="text-[13px] text-slate-600 leading-snug">
-                                <span class="font-semibold text-slate-800">{{ $act->user->name }}</span>
+                                <span class="font-semibold text-slate-800">{{ $act->user->name ?? 'N/A' }}</span>
                                 {{ $isCheckout ? 'check-out dari' : 'check-in di' }}
                                 <span class="font-medium">{{ $act->store_name }}</span>
                             </div>
@@ -223,10 +223,10 @@
                                     <div class="flex items-center gap-2">
                                         <div
                                             class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0">
-                                            {{ strtoupper(substr($att->user->name, 0, 2)) }}
+                                            {{ strtoupper(substr($att->user->name ?? 'N/A', 0, 2)) }}
                                         </div>
                                         <span
-                                            class="text-[13px] font-semibold text-slate-800">{{ $att->user->name }}</span>
+                                            class="text-[13px] font-semibold text-slate-800">{{ $att->user->name ?? 'N/A' }}</span>
                                     </div>
                                 </td>
                             @endif
