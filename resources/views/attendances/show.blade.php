@@ -41,9 +41,10 @@
                         <div class="flex items-center gap-2">
                             <div
                                 class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
-                                {{ strtoupper(substr($attendance->user->name, 0, 2)) }}
+                                {{ strtoupper(substr($attendance->user->name ?? 'User Telah Dihapus', 0, 2)) }}
                             </div>
-                            <span class="text-[13px] font-semibold text-slate-800">{{ $attendance->user->name }}</span>
+                            <span
+                                class="text-[13px] font-semibold text-slate-800">{{ $attendance->user->name ?? 'User Telah Dihapus' }}</span>
                         </div>
                     </div>
 

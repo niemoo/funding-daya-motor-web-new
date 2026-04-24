@@ -133,7 +133,7 @@ class AttendancesMainSheet implements FromQuery, WithHeadings, WithMapping, With
         return [
             $this->rowNumber,
             $att->id,
-            $att->user->name,
+            $att->user->name ?? 'User Telah Dihapus',
             $att->store_name,
             $att->person_in_charge_name,
             $att->person_in_charge_phone,
@@ -290,7 +290,7 @@ class AttendancesItemsSheet implements FromQuery, WithHeadings, WithMapping, Wit
                 $this->rowNumber,
                 $att->id,
                 $att->attendance_date->format('d/m/Y'),
-                $att->user->name,
+                $att->user->name ?? 'User Telah Dihapus',
                 $att->store_name,
                 $item->part_number,
                 $item->quantity,
