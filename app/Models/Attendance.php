@@ -25,6 +25,7 @@ class Attendance extends Model
         'checkout_photo',
         'work_duration_minutes',
         'is_auto_checkout',
+        'jenis_pembayaran',
     ];
 
     protected $casts = [

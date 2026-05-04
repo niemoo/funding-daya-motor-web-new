@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Exports\AttendanceItemTemplateExport;
 use App\Exports\AttendancesExport;
+use App\Models\ActivityLog;
 use App\Models\Attendance;
 use App\Models\User;
 use App\Traits\LogsActivity;
@@ -13,6 +14,7 @@ class AttendanceController extends Controller
 {
     use LogsActivity;
     
+    // ── List & Filter ─────────────────────────────────────────────────────────
     public function index(Request $request)
     {
         $query = Attendance::with('user', 'items')
@@ -64,6 +66,7 @@ class AttendanceController extends Controller
         return view('attendances.index', compact('attendances', 'salesList', 'sort', 'dir'));
     }
 
+    // ── Export Excel ─────────────────────────────────────────────────
     public function export(Request $request)
     {
         $filters = $request->all();
@@ -75,6 +78,7 @@ class AttendanceController extends Controller
         return Excel::download(new AttendancesExport($filters), $filename);
     }
 
+    // ── Download Template Excel ─────────────────────────────────────────────────
     public function downloadItemTemplate()
     {
         return Excel::download(
@@ -210,6 +214,35 @@ class AttendanceController extends Controller
             ->with('success', 'Data items berhasil diperbarui.');
     }
 
+    // ── Delete Attendance ─────────────────────────────────────────────────
+    public function destroy(Attendance $attendance)
+    {
+        if (!auth()->user()->isAdmin()) {
+            abort(403);
+        }
+
+        // Log activity sebelum delete
+        ActivityLog::create([
+            'user_id'    => auth()->id(),
+            'model_type' => 'attendance',
+            'model_id'   => $attendance->id,
+            'field_name' => 'deleted',
+            'old_value'  => json_encode([
+                'store_name'            => $attendance->store_name,
+                'attendance_date'       => $attendance->attendance_date->format('Y-m-d'),
+                'sales'                 => $attendance->user?->name,
+            ]),
+            'new_value'  => null,
+            'created_at' => now(),
+        ]);
+
+        $attendance->delete();
+
+        return redirect()
+            ->route('attendances.index')
+            ->with('success', 'Data absensi berhasil dihapus.');
+    }
+
     // ── Import Preview (AJAX) ─────────────────────────────────────────────────
     public function importItemsPreview(Request $request, Attendance $attendance)
     {
@@ -286,5 +319,39 @@ class AttendanceController extends Controller
             'message' => 'Import berhasil. ' . count($newItems) . ' part tersimpan.',
             'redirect'=> route('attendances.show', $attendance),
         ]);
+    }
+
+    // ── Generate Invoice (PDF) ─────────────────────────────────────────────────
+    public function invoice(Attendance $attendance)
+    {
+        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $attendance->load(['user', 'items']);
+
+        // Ambil semua kode_part dari items attendance ini
+        $kodeParts = $attendance->items->pluck('part_number')->unique();
+
+        // Query semua part sekaligus, key by kode_part untuk akses O(1)
+        $partsMap = \App\Models\Part::with('group')
+            ->whereIn('kode_part', $kodeParts)
+            ->get()
+            ->keyBy('kode_part');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('attendances.invoice', compact('attendance', 'partsMap'))
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'dpi'                     => 150,
+                'defaultFont'             => 'sans-serif',
+                'isRemoteEnabled'         => true,
+                'isHtml5ParserEnabled'    => true,
+                'isFontSubsettingEnabled' => true,
+            ]);
+
+        $filename = 'invoice-' . str_replace(' ', '-', strtolower($attendance->store_name))
+            . '-' . $attendance->attendance_date->format('d-m-Y') . '.pdf';
+
+        return $pdf->download($filename);
     }
 }

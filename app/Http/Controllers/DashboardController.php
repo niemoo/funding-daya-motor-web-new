@@ -76,6 +76,24 @@ class DashboardController extends Controller
             ->latest('updated_at')
             ->take(5)
             ->get();
+        
+        // -─ Maps ──
+        $mapAttendances = Attendance::with('user')
+            ->whereNotNull('checkin_latitude')
+            ->whereNotNull('checkin_longitude')
+            ->when(!$isAdmin, fn($q) => $q->where('user_id', auth()->id()))
+            ->select('id', 'user_id', 'store_name', 'checkin_latitude', 'checkin_longitude', 'attendance_date', 'checkin_time', 'checkout_time')
+            ->latest('checkin_time')
+            ->get()
+            ->map(fn($att) => [
+                'lat'        => (float) $att->checkin_latitude,
+                'lng'        => (float) $att->checkin_longitude,
+                'store_name' => $att->store_name,
+                'sales'      => $att->user?->name ?? 'User Dihapus',
+                'date'       => $att->attendance_date->format('d M Y'),
+                'checkintime'       => $att->checkin_time->format('H:i'),
+                'checkouttime'      => $att->checkout_time?->format('H:i') ?? 'Belum checkout',
+            ]);
 
         return view('dashboard.index', compact(
             'isAdmin',
@@ -84,6 +102,7 @@ class DashboardController extends Controller
             'recentAttendances',
             'topSales', 'maxVisits',
             'recentActivity',
+            'mapAttendances'
         ));
     }
 }

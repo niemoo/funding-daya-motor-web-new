@@ -159,7 +159,11 @@
                         {{-- ── Main Row ── --}}
                         <tr class="hover:bg-brand-50/40 transition-colors border-t border-slate-50"
                             data-detail-url="{{ route('attendances.show', $att) }}"
-                            data-edit-url="{{ route('attendances.edit', $att) }}">
+                            data-edit-url="{{ route('attendances.edit', $att) }}"
+                            data-delete-url="{{ route('attendances.destroy', $att) }}"
+                            data-invoice-url="{{ route('attendances.invoice', $att) }}"
+                            data-store-name="{{ addslashes($att->store_name) }}"
+                            data-is-admin="{{ auth()->user()->isAdmin() ? 'true' : 'false' }}">
 
                             {{-- Sales --}}
                             @if (auth()->user()->isAdmin())
@@ -431,6 +435,35 @@
         @endif
     </div>
 
+    {{-- Delete Modal --}}
+    <div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+        style="background: rgba(0,0,0,0.4); backdrop-filter: blur(4px)">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-2xl mx-auto mb-4">🗑️
+            </div>
+            <h3 class="text-[16px] font-bold text-slate-800 text-center mb-1">Hapus Absensi</h3>
+            <p class="text-[13px] text-slate-400 text-center mb-1">Apakah kamu yakin ingin menghapus absensi</p>
+            <p id="modal-store-name" class="text-[14px] font-bold text-slate-700 text-center mb-4">—</p>
+            <p class="text-[12px] text-rose-400 text-center mb-5 bg-rose-50 rounded-xl py-2 px-3">
+                ⚠️ Tindakan ini tidak dapat dibatalkan
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()"
+                    class="flex-1 py-2.5 bg-white border-[1.5px] border-slate-200 text-slate-500 hover:bg-slate-50 text-[13px] font-semibold rounded-[9px] transition-colors">
+                    Batal
+                </button>
+                <form id="delete-form" method="POST" class="flex-1">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                        class="w-full py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-[13px] font-semibold rounded-[9px] transition-colors">
+                        Ya, Hapus
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script>
             function toggleItems(id) {
@@ -501,6 +534,7 @@
                 const btn = event.currentTarget;
                 const rect = btn.getBoundingClientRect();
                 const row = btn.closest('tr');
+                const storeName = row.dataset.storeName;
                 const detailUrl = row.dataset.detailUrl;
                 const editUrl = row.dataset.editUrl;
 
@@ -509,17 +543,52 @@
                 menu.className = 'fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden';
                 menu.style.cssText = `min-width:144px; top:${rect.bottom + 4}px; left:${rect.right - 144}px;`;
 
+                const isAdmin = row.dataset.isAdmin === 'true';
+
                 menu.innerHTML = `
-                    <a href="${detailUrl}"
-                        class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
-                        👁️ Detail
-                    </a>
-                    <div class="h-px bg-slate-100"></div>
-                    <a href="${editUrl}"
-                        class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors font-medium">
-                        ✏️ Edit
-                    </a>
-                `;
+    <a href="${row.dataset.invoiceUrl}"
+        class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors font-medium">
+        🧾 Invoice
+    </a>
+    <div class="h-px bg-slate-100"></div>
+    <a href="${detailUrl}"
+        class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
+        👁️ Detail
+    </a>
+    <div class="h-px bg-slate-100"></div>
+    <a href="${editUrl}"
+        class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors font-medium">
+        ✏️ Edit
+    </a>
+    ${isAdmin ? `
+            <div class="h-px bg-slate-100"></div>
+            <button onclick="openDeleteModal('${row.dataset.deleteUrl}', decodeURIComponent('${encodeURIComponent(storeName)}'))"
+                class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-rose-500 hover:bg-rose-50 transition-colors font-medium">
+                🗑️ Hapus
+            </button>` : ''}
+`;
+
+                // menu.innerHTML = `
+        //     <a href="${row.dataset.invoiceUrl}"
+        //         class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors font-medium">
+        //         🧾 Invoice
+        //     </a>
+        //     <div class="h-px bg-slate-100"></div>
+        //     <a href="${detailUrl}"
+        //         class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
+        //         👁️ Detail
+        //     </a>
+        //     <div class="h-px bg-slate-100"></div>
+        //     <a href="${editUrl}"
+        //         class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors font-medium">
+        //         ✏️ Edit
+        //     </a>
+        //     <div class="h-px bg-slate-100"></div>
+        //     <button onclick="openDeleteModal('${row.dataset.deleteUrl}', decodeURIComponent('${encodeURIComponent(storeName)}'))"
+        //         class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-rose-500 hover:bg-rose-50 transition-colors font-medium">
+        //         🗑️ Hapus
+        //     </button>
+        // `;
 
                 document.body.appendChild(menu);
                 currentMenu = menuId;
@@ -539,6 +608,25 @@
                 document.querySelectorAll('[id^="floating-menu-"]').forEach(el => el.remove());
                 currentMenu = null;
             }
+
+            function openDeleteModal(url, storeName) {
+                document.getElementById('modal-store-name').textContent = storeName;
+                document.getElementById('delete-form').action = url;
+                closeAllMenus();
+                const modal = document.getElementById('delete-modal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            function closeDeleteModal() {
+                const modal = document.getElementById('delete-modal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            document.getElementById('delete-modal').addEventListener('click', function(e) {
+                if (e.target === this) closeDeleteModal();
+            });
 
             document.addEventListener('click', closeAllMenus);
             window.addEventListener('scroll', closeAllMenus, true);

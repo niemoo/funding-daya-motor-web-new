@@ -270,4 +270,111 @@
         </div>
     </div>
 
+    {{-- ── Map Kunjungan ── --}}
+    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden my-6">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <div>
+                <div class="text-[14px] font-bold text-slate-800 tracking-tight">Peta Kunjungan</div>
+                <div class="text-[12px] text-slate-400 mt-0.5">
+                    {{ $mapAttendances->count() }} titik kunjungan tercatat
+                </div>
+            </div>
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-brand-50 text-brand-600">
+                Semua Waktu
+            </span>
+        </div>
+        <div id="attendance-map" style="height: 420px; width: 100%;"></div>
+    </div>
+
+    @push('scripts')
+        <script>
+            // ── Map Kunjungan ─────────────────────────────────────────────────────
+            const attendancePoints = @json($mapAttendances);
+
+            const map = L.map('attendance-map', {
+                zoomControl: true,
+                scrollWheelZoom: false, // disable scroll zoom supaya tidak ganggu scroll halaman
+            });
+
+            // Tile layer — pakai MapTiler (konsisten dengan Flutter)
+            L.tileLayer(
+                'https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=XeTdVolm82QOwpbxB7C3', {
+                    attribution: '© MapTiler © OpenStreetMap contributors',
+                    maxZoom: 19,
+                }
+            ).addTo(map);
+
+            // Custom icon
+            const pinIcon = L.divIcon({
+                className: '',
+                html: `
+            <div style="
+                width: 32px;
+                height: 32px;
+                background: #1D61AF;
+                border: 2.5px solid white;
+                border-radius: 50%;
+                box-shadow: 0 2px 8px rgba(29,97,175,0.45);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+            ">📍</div>
+        `,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+                popupAnchor: [0, -18],
+            });
+
+            if (attendancePoints.length === 0) {
+                // Fallback center ke Indonesia kalau tidak ada data
+                map.setView([-2.5489, 118.0149], 5);
+            } else {
+                const bounds = [];
+
+                attendancePoints.forEach(point => {
+                    const marker = L.marker([point.lat, point.lng], {
+                            icon: pinIcon
+                        })
+                        .addTo(map);
+
+                    // Popup content
+                    const popupContent = `
+                <div style="font-family: Inter, sans-serif; min-width: 160px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
+                        ${point.store_name}
+                    </div>
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 2px;">
+                        👤 ${point.sales}
+                    </div>
+                    <div style="font-size: 11px; color: #64748b;">
+                        📅 ${point.date} · ${point.checkintime} - ${point.checkouttime}
+                    </div>
+                </div>
+            `;
+
+                    marker.bindPopup(popupContent, {
+                        closeButton: false,
+                        offset: [0, -8],
+                    });
+
+                    // Hover — open popup
+                    marker.on('mouseover', function() {
+                        this.openPopup();
+                    });
+
+                    marker.on('mouseout', function() {
+                        this.closePopup();
+                    });
+
+                    bounds.push([point.lat, point.lng]);
+                });
+
+                // Auto fit map ke semua titik
+                map.fitBounds(bounds, {
+                    padding: [40, 40]
+                });
+            }
+        </script>
+    @endpush
 </x-layouts.app>

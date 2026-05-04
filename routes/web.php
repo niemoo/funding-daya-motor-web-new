@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PartController;
+use App\Http\Controllers\PartGroupController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -21,10 +23,21 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/attendances/{attendance}/items', [AttendanceController::class, 'updateItems'])->name('attendances.items.update');
     Route::post('/attendances/{attendance}/items/import/preview', [AttendanceController::class, 'importItemsPreview'])->name('attendances.items.import.preview');
     Route::post('/attendances/{attendance}/items/import/confirm', [AttendanceController::class, 'importItemsConfirm'])->name('attendances.items.import.confirm');
+    Route::get('/attendances/{attendance}/invoice', [AttendanceController::class, 'invoice'])->name('attendances.invoice');
+    Route::delete('/attendances/{attendance}', [AttendanceController::class, 'destroy'])
+    ->name('attendances.destroy')
+    ->middleware('role:Admin');
 
     // Users
     Route::get('/users/export', [UserController::class, 'export'])->name('users.export')->middleware('role:Admin');
     Route::resource('users', UserController::class)->middleware('role:Admin');
+
+    // Part Groups
+    Route::resource('part-groups', PartGroupController::class)->except(['show']);
+
+    // Parts
+    Route::get('/parts/export', [PartController::class, 'export'])->name('parts.export');
+    Route::resource('parts', PartController::class)->except(['show']);
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');

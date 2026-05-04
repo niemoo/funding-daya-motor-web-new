@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             AttendanceSeeder::class,
             AttendanceItemSeeder::class,
+            PartSeeder::class,
         ]);
     }
 }
