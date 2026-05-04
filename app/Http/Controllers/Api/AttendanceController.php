@@ -100,7 +100,7 @@ class AttendanceController extends Controller
             'checkout_longitude' => 'required|numeric',
             'checkout_time'      => 'required|date_format:Y-m-d H:i:s',
             'checkout_photo'     => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'jenis_pembayaran'    => 'nullable|string|max:255',
+            'payment_method'    => 'nullable|string|max:255',
         ], [
             'checkout_latitude.required'  => 'Latitude wajib diisi.',
             'checkout_latitude.numeric'   => 'Latitude harus berupa angka.',
@@ -112,8 +112,8 @@ class AttendanceController extends Controller
             'checkout_photo.image'        => 'File harus berupa gambar.',
             'checkout_photo.mimes'        => 'Format foto harus jpg, jpeg, png, atau webp.',
             'checkout_photo.max'          => 'Ukuran foto maksimal 5MB.',
-            'jenis_pembayaran.string'     => 'Jenis pembayaran harus berupa teks.',
-            'jenis_pembayaran.max'          => 'Jenis pembayaran maksimal 255 karakter.',
+            'payment_method.string'     => 'Jenis pembayaran harus berupa teks.',
+            'payment_method.max'          => 'Jenis pembayaran maksimal 255 karakter.',
         ]);
 
         $user = $request->user();
@@ -148,7 +148,7 @@ class AttendanceController extends Controller
             'checkout_longitude' => $request->checkout_longitude,
             'checkout_photo'     => $photoPath,
             'work_duration_minutes' => $durationMinutes,
-            'jenis_pembayaran'   => $request->jenis_pembayaran,
+            'jenis_pembayaran'   => $request->payment_method,
         ]);
 
         return response()->json([

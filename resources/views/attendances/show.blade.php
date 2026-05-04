@@ -63,6 +63,15 @@
                         <div class="text-[12px] text-slate-400 mt-0.5">{{ $attendance->person_in_charge_phone }}</div>
                     </div>
 
+                    {{-- Jenis Pembayaran --}}
+                    <div class="px-5 py-3.5">
+                        <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1">Jenis
+                            Pembayaran</div>
+                        <div class="text-[13px] font-semibold text-slate-800">
+                            {{ $attendance->jenis_pembayaran ?? '—' }}
+                        </div>
+                    </div>
+
                     {{-- Tanggal --}}
                     <div class="px-5 py-3.5">
                         <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1">Tanggal</div>
@@ -87,7 +96,7 @@
                             <div class="text-[13px] font-semibold text-slate-800">
                                 {{ $attendance->checkout_time->format('H:i') }}</div>
                         @else
-                            <span class="text-[13px] text-slate-300">—</span>
+                            <span class="text-[13px] font-semibold text-slate-800">—</span>
                         @endif
                     </div>
 

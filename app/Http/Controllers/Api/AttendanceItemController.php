@@ -69,7 +69,7 @@ class AttendanceItemController extends Controller
         $merged = collect($request->items)
             ->groupBy('part_number')
             ->map(fn($group, $partNumber) => [
-                'part_number' => $partNumber,
+                'part_number' => (string) $partNumber,
                 'quantity'    => $group->sum('quantity'),
                 'notes'       => $group->last()['notes'] ?? null,
             ])
