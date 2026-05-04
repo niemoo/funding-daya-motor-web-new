@@ -36,6 +36,10 @@
             <p class="text-[13px] text-slate-400 mt-1">Total {{ $parts->total() }} part terdaftar</p>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
+            <a href="https://www.hondamotopub.com/AHJ" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-100 hover:bg-blue-200 text-blue-700 text-[13px] font-semibold rounded-[10px] transition-all">
+                📖 Lihat Katalog
+            </a>
             <a href="{{ route('parts.create') }}"
                 class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[10px] transition-all"
                 style="box-shadow: 0 3px 10px rgba(29,97,175,0.25)">
