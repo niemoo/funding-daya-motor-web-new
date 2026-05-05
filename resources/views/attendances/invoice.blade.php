@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice Pembelian — {{ $attendance->store_name }}</title>
+    <title>Draft Pembelian — {{ $attendance->store_name }}</title>
     <style>
         * {
             margin: 0;
@@ -251,7 +251,7 @@
             <img src="{{ $base64 }}">
         </div>
         <div class="header-right">
-            <div class="invoice-title">Invoice Pembelian</div>
+            <div class="invoice-title">Draft Pembelian</div>
             <div class="invoice-date">
                 Tanggal: {{ now()->locale('id')->isoFormat('D MMMM Y') }}
             </div>
@@ -284,6 +284,28 @@
                 <div class="info-label">Pengirim</div>
                 <div class="info-value">: {{ $attendance->user?->name ?? '—' }}</div>
             </div>
+        </div>
+    </div>
+
+    {{-- ── PAYMENT INFO ── --}}
+    <div style="margin-bottom: 28px;">
+        <div
+            style="
+        font-size: 11px;
+        font-weight: bold;
+        color: #1D61AF;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    ">
+            Informasi Pembayaran
+        </div>
+
+        <div style="font-size: 11px; color: #2D3748;">
+            Jenis Pembayaran:
+            <span style="font-weight: 600;">
+                {{ $attendance->jenis_pembayaran ?? '-' }}
+            </span>
         </div>
     </div>
 
@@ -343,7 +365,7 @@
 
     {{-- ── APPROVAL ── --}}
     <div class="approval-note">
-        Invoice Pembelian ini telah diperiksa dan divalidasi oleh:
+        Draft Pembelian ini telah diperiksa dan divalidasi oleh:
     </div>
 
     <div class="signature-section">
