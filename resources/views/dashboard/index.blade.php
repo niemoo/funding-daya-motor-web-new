@@ -280,7 +280,7 @@
                 </div>
             </div>
             <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-brand-50 text-brand-600">
-                Semua Waktu
+                30 Hari Terakhir
             </span>
         </div>
         <div id="attendance-map" style="height: 420px; width: 100%;"></div>
