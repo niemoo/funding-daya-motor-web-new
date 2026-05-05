@@ -3,7 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Part;
+use App\Jobs\ImportPartsJob;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithStartRow;
 
 class PartController extends Controller
 {
@@ -168,5 +175,101 @@ class PartController extends Controller
         $part->delete();
         return redirect()->route('parts.index')
             ->with('success', 'Part berhasil dihapus.');
+    }
+
+    // ── Upload & Dispatch Import ──────────────────────────────────────────
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls|max:51200', // max 50MB
+        ], [
+            'file.required' => 'File Excel wajib diupload.',
+            'file.mimes'    => 'File harus berformat xlsx atau xls.',
+            'file.max'      => 'Ukuran file maksimal 50MB.',
+        ]);
+
+        // Baca semua rows dari Excel
+        $import = new class implements ToCollection, WithStartRow {
+            public $rows;
+            public function startRow(): int { return 2; }
+            public function collection(Collection $rows) { $this->rows = $rows; }
+        };
+
+        ini_set('memory_limit', '512M');
+        Excel::import($import, $request->file('file'));
+
+        $rows = collect($import->rows)
+            ->filter(fn($row) => !empty(trim((string)($row[1] ?? ''))))
+            ->values();
+
+        if ($rows->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data valid di file Excel.',
+            ], 422);
+        }
+
+        // Bagi ke chunks per 500 baris
+        $chunks     = $rows->chunk(500);
+        $totalChunks = $chunks->count();
+        $cacheKey   = 'import_parts_' . auth()->id() . '_' . time();
+
+        // Init progress di cache
+        Cache::put($cacheKey, [
+            'done'  => 0,
+            'total' => $totalChunks,
+            'rows'  => $rows->count(),
+        ], now()->addHour());
+
+        // Dispatch semua jobs sebagai batch
+        $jobs = $chunks->map(fn($chunk, $index) => new ImportPartsJob(
+            rows: $chunk->values()->toArray(),
+            cacheKey: $cacheKey,
+            chunkIndex: $index,
+            totalChunks: $totalChunks,
+        ))->toArray();
+
+        Bus::batch($jobs)
+            ->name('Import Parts - ' . auth()->user()->name)
+            ->allowFailures()
+            ->dispatch();
+
+        return response()->json([
+            'success'   => true,
+            'cache_key' => $cacheKey,
+            'total_rows'=> $rows->count(),
+            'message'   => 'Import dimulai. Memproses ' . $rows->count() . ' baris...',
+        ]);
+    }
+
+    // ── Cek Progress ──────────────────────────────────────────────────────
+    public function importProgress(Request $request)
+    {
+        $cacheKey = $request->cache_key;
+
+        if (!$cacheKey) {
+            return response()->json(['success' => false, 'message' => 'Cache key tidak valid.'], 422);
+        }
+
+        $progress = Cache::get($cacheKey);
+
+        if (!$progress) {
+            return response()->json(['success' => false, 'message' => 'Import tidak ditemukan.'], 404);
+        }
+
+        $percentage = $progress['total'] > 0
+            ? round(($progress['done'] / $progress['total']) * 100)
+            : 0;
+
+        $isDone = $progress['done'] >= $progress['total'];
+
+        return response()->json([
+            'success'    => true,
+            'done'       => $progress['done'],
+            'total'      => $progress['total'],
+            'rows'       => $progress['rows'],
+            'percentage' => $percentage,
+            'is_done'    => $isDone,
+        ]);
     }
 }

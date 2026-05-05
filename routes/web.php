@@ -37,6 +37,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Parts
     Route::get('/parts/export', [PartController::class, 'export'])->name('parts.export');
+    Route::get('/parts/import/progress', [PartController::class, 'importProgress'])->name('parts.import.progress');
+    Route::post('/parts/import', [PartController::class, 'importExcel'])->name('parts.import');
     Route::resource('parts', PartController::class)->except(['show']);
 
     // Profile
