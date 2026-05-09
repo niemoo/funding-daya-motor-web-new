@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes, HasApiTokens;
+    use HasFactory, Notifiable, SoftDeletes, HasApiTokens, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -20,7 +21,6 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'role_id',
         'name',
         'email',
         'password',
@@ -49,23 +49,18 @@ class User extends Authenticatable
         ];
     }
 
-    public function role()
-    {
-        return $this->belongsTo(Role::class);
-    }
-
     public function isAdmin(): bool
     {
-        return $this->role->name === 'Admin';
+        return $this->hasRole('Admin');
     }
 
     public function isSales(): bool
     {
-        return $this->role->name === 'Sales';
+        return $this->hasRole('Sales');
     }
 
     public function attendances()
-{
-    return $this->hasMany(Attendance::class);
-}
+    {
+        return $this->hasMany(Attendance::class);
+    }
 }

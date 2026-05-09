@@ -16,11 +16,13 @@
                 </p>
             </div>
         </div>
-        <a href="{{ route('attendances.edit', $attendance) }}"
-            class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[10px] transition-colors"
-            style="box-shadow: 0 3px 10px rgba(29,97,175,0.25)">
-            ✏️ Edit Kunjungan
-        </a>
+        @can('attendances.edit')
+            <a href="{{ route('attendances.edit', $attendance) }}"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[10px] transition-colors"
+                style="box-shadow: 0 3px 10px rgba(29,97,175,0.25)">
+                ✏️ Edit Kunjungan
+            </a>
+        @endcan
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -213,10 +215,12 @@
                             </div>
                         @endif
                     </div>
-                    <a href="{{ route('attendances.edit', $attendance) }}#items"
-                        class="text-[12px] font-semibold text-brand-600 hover:text-brand-700 transition-colors">
-                        Edit Items →
-                    </a>
+                    @can('attendances.edit')
+                        <a href="{{ route('attendances.edit', $attendance) }}#items"
+                            class="text-[12px] font-semibold text-brand-600 hover:text-brand-700 transition-colors">
+                            Edit Items →
+                        </a>
+                    @endcan
                 </div>
                 @if ($attendance->items->count() > 0)
                     <table class="w-full">

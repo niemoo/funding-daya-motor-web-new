@@ -59,11 +59,13 @@
                 class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-[1.5px] border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] font-semibold rounded-[10px] transition-all">
                 📄 Template Excel
             </a>
-            <a href="{{ route('attendances.export', request()->query()) }}"
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[13px] font-semibold rounded-[10px] transition-all"
-                style="box-shadow: 0 3px 10px rgba(5,150,105,0.25)">
-                📥 Export Excel
-            </a>
+            @can('attendances.export')
+                <a href="{{ route('attendances.export', request()->query()) }}"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[13px] font-semibold rounded-[10px] transition-all"
+                    style="box-shadow: 0 3px 10px rgba(5,150,105,0.25)">
+                    📥 Export Excel
+                </a>
+            @endcan
         </div>
     </div>
 
@@ -78,7 +80,7 @@
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari sales, toko, PIC..."
                 class="w-full pl-8 pr-3 py-2.5 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-700 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-50 transition-all placeholder-slate-400">
         </div>
-        @if (auth()->user()->isAdmin())
+        @can('attendances.view_all')
             <select name="user_id"
                 class="py-2.5 px-3 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-600 outline-none focus:border-brand-600 transition-all">
                 <option value="">Semua Sales</option>
@@ -88,7 +90,7 @@
                     </option>
                 @endforeach
             </select>
-        @endif
+        @endcan
         <input type="date" name="date" value="{{ request('date') }}"
             class="py-2.5 px-3 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-600 outline-none focus:border-brand-600 transition-all">
         <select name="status"
@@ -117,11 +119,11 @@
             <table class="w-full" style="min-width:1300px">
                 <thead>
                     <tr>
-                        @if (auth()->user()->isAdmin())
+                        @can('attendances.view_all')
                             <th
                                 class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-left bg-slate-50 border-b border-slate-100 whitespace-nowrap">
                                 Sales</th>
-                        @endif
+                        @endcan
                         <x-sort-th column="store_name" label="Toko & PIC" :currentSort="$sort" :currentDir="$dir" />
                         <x-sort-th column="attendance_date" label="Tanggal" :currentSort="$sort" :currentDir="$dir" />
                         <x-sort-th column="checkin_time" label="Check-in" :currentSort="$sort" :currentDir="$dir" />
@@ -166,7 +168,7 @@
                             data-is-admin="{{ auth()->user()->isAdmin() ? 'true' : 'false' }}">
 
                             {{-- Sales --}}
-                            @if (auth()->user()->isAdmin())
+                            @can('attendances.view_all')
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
                                         <div
@@ -177,7 +179,7 @@
                                             class="text-[13px] font-semibold text-slate-800">{{ $att->user->name ?? 'N/A' }}</span>
                                     </div>
                                 </td>
-                            @endif
+                            @endcan
 
                             {{-- Toko & PIC --}}
                             <td class="px-4 py-3" style="min-width:180px">
@@ -388,8 +390,10 @@
                         <tr>
                             <td colspan="{{ auth()->user()->isAdmin() ? 13 : 12 }}" class="px-4 py-12 text-center">
                                 <div class="text-2xl mb-2">📋</div>
-                                <div class="text-[14px] font-semibold text-slate-500">Tidak ada data absensi</div>
-                                <div class="text-[12px] text-slate-400 mt-1">Coba ubah filter pencarian</div>
+                                <div class="text-[14px] font-semibold text-slate-500">Tidak ada data absensi ditemukan
+                                </div>
+                                <div class="text-[12px] text-slate-400 mt-1">Coba ubah kata kunci pencarian atau tambah
+                                    data absensi baru</div>
                             </td>
                         </tr>
                     @endforelse
@@ -546,27 +550,35 @@
                 const isAdmin = row.dataset.isAdmin === 'true';
 
                 menu.innerHTML = `
+                @can('attendances.invoice')
     <a href="${row.dataset.invoiceUrl}"
         class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors font-medium">
         🧾 Invoice
     </a>
+    @endcan
     <div class="h-px bg-slate-100"></div>
     <a href="${detailUrl}"
         class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
         👁️ Detail
     </a>
     <div class="h-px bg-slate-100"></div>
+    @can('attendances.edit')
     <a href="${editUrl}"
         class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors font-medium">
         ✏️ Edit
     </a>
-    ${isAdmin ? `
-            <div class="h-px bg-slate-100"></div>
-            <button onclick="openDeleteModal('${row.dataset.deleteUrl}', decodeURIComponent('${encodeURIComponent(storeName)}'))"
-                class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-rose-500 hover:bg-rose-50 transition-colors font-medium">
-                🗑️ Hapus
-            </button>` : ''}
-`;
+    @endcan
+    <div class="h-px bg-slate-100"></div>
+    @can('attendances.delete')
+        <button onclick="openDeleteModal('${row.dataset.deleteUrl}', decodeURIComponent('${encodeURIComponent(storeName)}'))"
+        class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-rose-500 hover:bg-rose-50 transition-colors font-medium">
+        🗑️ Hapus
+    </button>
+    @endcan
+    `
+
+
+                ;
 
                 // menu.innerHTML = `
         //     <a href="${row.dataset.invoiceUrl}"

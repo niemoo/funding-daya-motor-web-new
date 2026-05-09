@@ -40,15 +40,19 @@
                 class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-100 hover:bg-blue-200 text-blue-700 text-[13px] font-semibold rounded-[10px] transition-all">
                 📖 Lihat Katalog
             </a>
-            <button onclick="openImportModal()"
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-[1.5px] border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] font-semibold rounded-[10px] transition-all">
-                📂 Import Excel
-            </button>
-            <a href="{{ route('parts.create') }}"
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[10px] transition-all"
-                style="box-shadow: 0 3px 10px rgba(29,97,175,0.25)">
-                ＋ Tambah Part
-            </a>
+            @can('parts.import')
+                <button onclick="openImportModal()"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-[1.5px] border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] font-semibold rounded-[10px] transition-all">
+                    📂 Import Excel
+                </button>
+            @endcan
+            @can('parts.create')
+                <a href="{{ route('parts.create') }}"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[10px] transition-all"
+                    style="box-shadow: 0 3px 10px rgba(29,97,175,0.25)">
+                    ＋ Tambah Part
+                </a>
+            @endcan
         </div>
     </div>
 
@@ -99,9 +103,11 @@
                         <x-sort-th column="deskripsi_part" label="Deskripsi Part" :currentSort="$sort" :currentDir="$dir" />
                         <x-sort-th column="group" label="Group" :currentSort="$sort" :currentDir="$dir" />
                         <x-sort-th column="created_at" label="Ditambahkan" :currentSort="$sort" :currentDir="$dir" />
-                        <th
-                            class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100">
-                            Aksi</th>
+                        @if (auth()->user()->can('parts.edit') || auth()->user()->can('parts.delete'))
+                            <th
+                                class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100">
+                                Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
@@ -137,19 +143,23 @@
                             </td>
 
                             {{-- Aksi --}}
-                            <td class="px-4 py-3 text-center">
-                                <button onclick="toggleActionMenu(event, 'menu-{{ $part->id }}')"
-                                    class="w-8 h-8 flex items-center justify-center mx-auto rounded-[7px] text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors text-xl font-bold">
-                                    ⋮
-                                </button>
-                            </td>
+                            @if (auth()->user()->can('parts.edit') || auth()->user()->can('parts.delete'))
+                                <td class="px-4 py-3 text-center">
+                                    <button onclick="toggleActionMenu(event, 'menu-{{ $part->id }}')"
+                                        class="w-8 h-8 flex items-center justify-center mx-auto rounded-[7px] text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors text-xl font-bold">
+                                        ⋮
+                                    </button>
+                                </td>
+                            @endif
                         </tr>
                     @empty
                         <tr>
                             <td colspan="5" class="px-4 py-12 text-center">
                                 <div class="text-2xl mb-2">🔧</div>
-                                <div class="text-[14px] font-semibold text-slate-500">Tidak ada part ditemukan</div>
-                                <div class="text-[12px] text-slate-400 mt-1">Coba ubah filter atau tambah part baru
+                                <div class="text-[14px] font-semibold text-slate-500">Tidak ada data part ditemukan
+                                </div>
+                                <div class="text-[12px] text-slate-400 mt-1">Coba ubah kata kunci pencarian atau tambah
+                                    data part baru
                                 </div>
                             </td>
                         </tr>
@@ -296,15 +306,19 @@
                 menu.className = 'fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden';
                 menu.style.cssText = `min-width:144px; top:${rect.bottom + 4}px; left:${rect.right - 144}px;`;
                 menu.innerHTML = `
-                <a href="${editUrl}"
+                @can('parts.edit')
+                    <a href="${editUrl}"
                     class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
                     ✏️ Edit
-                </a>
+                    </a>
+                @endcan
                 <div class="h-px bg-slate-100"></div>
-                <button onclick="openDeleteModal('${deleteUrl}', decodeURIComponent('${encodeURIComponent(partName)}'))"
-                    class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-rose-500 hover:bg-rose-50 transition-colors font-medium">
-                    🗑️ Hapus
-                </button>
+                @can('parts.delete')
+                    <button onclick="openDeleteModal('${deleteUrl}', decodeURIComponent('${encodeURIComponent(partName)}'))"
+                        class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-rose-500 hover:bg-rose-50 transition-colors font-medium">
+                        🗑️ Hapus
+                    </button>
+                @endcan
             `;
                 document.body.appendChild(menu);
                 currentMenu = menuId;

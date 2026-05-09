@@ -43,17 +43,17 @@
                 {{-- Role --}}
                 <div>
                     <label class="block text-[13px] font-semibold text-slate-600 mb-1.5">Role</label>
-                    <select name="role_id"
+                    <select name="role"
                         class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[14px] text-slate-800 outline-none transition-all
-                        {{ $errors->has('role_id') ? 'border-rose-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
+        {{ $errors->has('role') ? 'border-rose-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
                         <option value="">— Pilih Role —</option>
                         @foreach ($roles as $role)
-                            <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
+                            <option value="{{ $role->name }}" {{ old('role') === $role->name ? 'selected' : '' }}>
                                 {{ $role->name }}
                             </option>
                         @endforeach
                     </select>
-                    @error('role_id')
+                    @error('role')
                         <p class="mt-1.5 text-[12px] text-rose-500">{{ $message }}</p>
                     @enderror
                 </div>

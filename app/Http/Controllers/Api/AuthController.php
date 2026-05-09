@@ -16,9 +16,7 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $user = User::with('role')
-            ->where('email', $request->email)
-            ->first();
+        $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -27,7 +25,8 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if ($user->role->name !== 'Sales') {
+        // Hanya Sales yang boleh login mobile
+        if (!$user->hasRole('Sales')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Akses ditolak. Hanya Sales yang dapat login di aplikasi mobile.',
@@ -44,13 +43,13 @@ class AuthController extends Controller
                     'id'    => $user->id,
                     'name'  => $user->name,
                     'email' => $user->email,
-                    'role'  => $user->role->name,
+                    'role'  => $user->getRoleNames()->first(),
                 ],
-                'token'     => $token,
+                'token' => $token,
             ],
         ]);
     }
-
+    
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -63,7 +62,7 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        $user = $request->user()->load('role');
+        $user = $request->user();
 
         return response()->json([
             'success' => true,
@@ -72,7 +71,7 @@ class AuthController extends Controller
                     'id'    => $user->id,
                     'name'  => $user->name,
                     'email' => $user->email,
-                    'role'  => $user->role->name,
+                    'role'  => $user->getRoleNames()->first(),
                 ],
             ],
         ]);

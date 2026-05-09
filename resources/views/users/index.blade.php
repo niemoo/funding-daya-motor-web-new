@@ -36,16 +36,20 @@
             <p class="text-[13px] text-slate-400 mt-1">Total {{ $users->total() }} pengguna terdaftar di sistem</p>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-            <a href="{{ route('users.export', request()->query()) }}"
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[13px] font-semibold rounded-[10px] transition-all"
-                style="box-shadow: 0 3px 10px rgba(5,150,105,0.25)">
-                📥 Export Excel
-            </a>
-            <a href="{{ route('users.create') }}"
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[10px] transition-all"
-                style="box-shadow: 0 3px 10px rgba(29,97,175,0.25)">
-                ＋ Tambah User
-            </a>
+            @can('users.export')
+                <a href="{{ route('users.export', request()->query()) }}"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[13px] font-semibold rounded-[10px] transition-all"
+                    style="box-shadow: 0 3px 10px rgba(5,150,105,0.25)">
+                    📥 Export Excel
+                </a>
+            @endcan
+            @can('users.create')
+                <a href="{{ route('users.create') }}"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[10px] transition-all"
+                    style="box-shadow: 0 3px 10px rgba(29,97,175,0.25)">
+                    ＋ Tambah User
+                </a>
+            @endcan
         </div>
     </div>
 
@@ -91,10 +95,14 @@
                         <th
                             class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-left bg-slate-50 border-b border-slate-100">
                             Role</th>
-                        <x-sort-th column="created_at" label="Bergabung" :currentSort="$sort" :currentDir="$dir" />
-                        <th
-                            class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100">
-                            Aksi</th>
+                        <x-sort-th column="created_at" label="Bergabung" :currentSort="$sort" :currentDir="$dir"
+                            class="w-[140px]" />
+                        @if (auth()->user()->can('users.edit') || auth()->user()->can('users.delete'))
+                            <th
+                                class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100">
+                                Aksi
+                            </th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
@@ -102,7 +110,9 @@
                         <tr class="hover:bg-brand-50/40 transition-colors"
                             data-user-name="{{ addslashes($user->name) }}"
                             data-edit-url="{{ route('users.edit', $user) }}"
-                            data-is-self="{{ $user->id === auth()->id() ? 'true' : 'false' }}">
+                            data-is-self="{{ $user->id === auth()->id() ? 'true' : 'false' }}"
+                            data-can-edit="{{ auth()->user()->can('users.edit') ? 'true' : 'false' }}"
+                            data-can-delete="{{ auth()->user()->can('users.delete') ? 'true' : 'false' }}">
 
                             {{-- User --}}
                             <td class="px-4 py-3">
@@ -124,13 +134,13 @@
 
                             {{-- Role --}}
                             <td class="px-4 py-3">
-                                @if ($user->role->name === 'Admin')
+                                @foreach ($user->getRoleNames() as $roleName)
                                     <span
-                                        class="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-600">Admin</span>
-                                @else
-                                    <span
-                                        class="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600">Sales</span>
-                                @endif
+                                        class="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full
+            {{ $roleName === 'Admin' ? 'bg-brand-50 text-brand-600' : 'bg-emerald-50 text-emerald-600' }}">
+                                        {{ $roleName }}
+                                    </span>
+                                @endforeach
                             </td>
 
                             {{-- Bergabung --}}
@@ -139,19 +149,24 @@
                             </td>
 
                             {{-- Aksi --}}
-                            <td class="px-4 py-3 text-center">
-                                <button onclick="toggleActionMenu(event, 'menu-{{ $user->id }}')"
-                                    class="w-8 h-8 flex items-center justify-center mx-auto rounded-[7px] text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors text-xl font-bold">
-                                    ⋮
-                                </button>
-                            </td>
+                            @if (auth()->user()->can('users.edit') || auth()->user()->can('users.delete'))
+                                <td class="px-4 py-3 text-center">
+                                    <button onclick="toggleActionMenu(event, 'menu-{{ $user->id }}')"
+                                        class="w-8 h-8 flex items-center justify-center mx-auto rounded-[7px] text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors text-xl font-bold">
+                                        ⋮
+                                    </button>
+                                </td>
+                            @endif
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-12 text-center">
+                            <td colspan="{{ auth()->user()->can('users.edit') || auth()->user()->can('users.delete') ? 5 : 4 }}"
+                                class="px-4 py-12 text-center">
                                 <div class="text-2xl mb-2">👥</div>
-                                <div class="text-[14px] font-semibold text-slate-500">Tidak ada user ditemukan</div>
-                                <div class="text-[12px] text-slate-400 mt-1">Coba ubah filter pencarian</div>
+                                <div class="text-[14px] font-semibold text-slate-500">Tidak ada data user ditemukan
+                                </div>
+                                <div class="text-[12px] text-slate-400 mt-1">Coba ubah kata kunci pencarian atau tambah
+                                    data user baru</div>
                             </td>
                         </tr>
                     @endforelse
@@ -213,40 +228,67 @@
                 const btn = event.currentTarget;
                 const rect = btn.getBoundingClientRect();
                 const row = btn.closest('tr');
+
                 const userId = menuId.replace('menu-', '');
                 const userName = row.dataset.userName;
                 const editUrl = row.dataset.editUrl;
+
+                const canEdit = row.dataset.canEdit === 'true';
+                const canDelete = row.dataset.canDelete === 'true';
                 const isSelf = row.dataset.isSelf === 'true';
 
+                let menuItems = '';
+
+                if (canEdit) {
+                    menuItems += `
+            <a href="${editUrl}"
+                class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors font-medium">
+                ✏️ Edit
+            </a>
+        `;
+                }
+
+                if (canDelete) {
+                    if (canEdit) {
+                        menuItems += `<div class="h-px bg-slate-100"></div>`;
+                    }
+
+                    menuItems += `
+            <button onclick="openDeleteModal('${userId}', decodeURIComponent('${encodeURIComponent(userName)}'))"
+                class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-rose-500 hover:bg-rose-50 transition-colors font-medium">
+                🗑️ Hapus
+            </button>
+        `;
+                }
+
+                if (!menuItems) return;
+
                 const menu = document.createElement('div');
+
                 menu.id = 'floating-' + menuId;
                 menu.className = 'fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden';
-                menu.style.cssText = `min-width:144px; top:${rect.bottom + 4}px; left:${rect.right - 144}px;`;
 
-                menu.innerHTML = `
-        <a href="${editUrl}"
-           class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors font-medium">
-            ✏️ Edit
-        </a>
-        ${!isSelf ? `
-                <div class="h-px bg-slate-100 mx-0"></div>
-                <button onclick="openDeleteModal('${userId}', decodeURIComponent('${encodeURIComponent(userName)}'))"
-                        class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-rose-500 hover:bg-rose-50 transition-colors font-medium">
-                    🗑️ Hapus
-                </button>` : ''}
+                menu.style.cssText = `
+        min-width:144px;
+        top:${rect.bottom + 4}px;
+        left:${rect.right - 144}px;
     `;
 
+                menu.innerHTML = menuItems;
+
                 document.body.appendChild(menu);
+
                 currentMenu = menuId;
 
-                // Cek apakah menu keluar viewport bawah
                 requestAnimationFrame(() => {
                     const mRect = menu.getBoundingClientRect();
+
                     if (mRect.bottom > window.innerHeight) {
                         menu.style.top = (rect.top - mRect.height - 4) + 'px';
                     }
+
                     if (mRect.left < 0) {
-                        menu.style.left = (rect.left) + 'px';
+                        menu.style.left = rect.left + 'px';
                     }
                 });
             }

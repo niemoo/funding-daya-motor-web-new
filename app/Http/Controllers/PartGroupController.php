@@ -20,7 +20,7 @@ class PartGroupController extends Controller
         $dir  = $request->dir === 'desc' ? 'desc' : 'asc';
         $query->orderBy($sort, $dir);
 
-        $groups = $query->paginate(15)->withQueryString();
+        $groups = $query->paginate(10)->withQueryString();
 
         return view('part-groups.index', compact('groups', 'sort', 'dir'));
     }

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\UsersExport;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Models\Role;
+use Spatie\Permission\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,9 +14,8 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::with('role');
+        $query = User::with('roles');
 
-        // Search
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
@@ -24,12 +23,10 @@ class UserController extends Controller
             });
         }
 
-        // Filter role
         if ($request->filled('role')) {
-            $query->whereHas('role', fn($q) => $q->where('name', $request->role));
+            $query->whereHas('roles', fn($q) => $q->where('name', $request->role));
         }
 
-        // Sort
         $sortable = ['name', 'email', 'created_at'];
         $sort = in_array($request->sort, $sortable) ? $request->sort : 'created_at';
         $dir  = $request->dir === 'asc' ? 'asc' : 'desc';
@@ -53,7 +50,7 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'role_id'  => 'required|exists:roles,id',
+            'role'     => 'required|exists:roles,name',
         ], [
             'name.required'      => 'Nama wajib diisi.',
             'email.required'     => 'Email wajib diisi.',
@@ -62,18 +59,19 @@ class UserController extends Controller
             'password.required'  => 'Password wajib diisi.',
             'password.min'       => 'Password minimal 8 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
-            'role_id.required'   => 'Role wajib dipilih.',
+            'role.required'      => 'Role wajib dipilih.',
         ]);
 
-        User::create([
+        $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role_id'  => $request->role_id,
         ]);
 
+        $user->assignRole($request->role);
+
         return redirect()->route('users.index')
-                         ->with('success', 'User berhasil ditambahkan.');
+            ->with('success', 'User berhasil ditambahkan.');
     }
 
     public function edit(User $user)
@@ -85,10 +83,10 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name'    => 'required|string|max:255',
-            'email'   => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'password'=> 'nullable|string|min:8|confirmed',
-            'role_id' => 'required|exists:roles,id',
+            'name'     => 'required|string|max:255',
+            'email'    => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'password' => 'nullable|string|min:8|confirmed',
+            'role'     => 'required|exists:roles,name',
         ], [
             'name.required'      => 'Nama wajib diisi.',
             'email.required'     => 'Email wajib diisi.',
@@ -96,13 +94,12 @@ class UserController extends Controller
             'email.unique'       => 'Email sudah digunakan.',
             'password.min'       => 'Password minimal 8 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
-            'role_id.required'   => 'Role wajib dipilih.',
+            'role.required'      => 'Role wajib dipilih.',
         ]);
 
         $data = [
-            'name'    => $request->name,
-            'email'   => $request->email,
-            'role_id' => $request->role_id,
+            'name'  => $request->name,
+            'email' => $request->email,
         ];
 
         if ($request->filled('password')) {
@@ -110,27 +107,31 @@ class UserController extends Controller
         }
 
         $user->update($data);
+        $user->syncRoles($request->role);
 
         return redirect()->route('users.index')
-                         ->with('success', 'User berhasil diperbarui.');
+            ->with('success', 'User berhasil diperbarui.');
     }
 
     public function destroy(User $user)
     {
-        // Cegah hapus diri sendiri
         if ($user->id === auth()->id()) {
             return redirect()->route('users.index')
-                             ->with('error', 'Tidak dapat menghapus akun sendiri.');
+                ->with('error', 'Tidak dapat menghapus akun sendiri.');
         }
 
         $user->delete();
 
         return redirect()->route('users.index')
-                         ->with('success', 'User berhasil dihapus.');
+            ->with('success', 'User berhasil dihapus.');
     }
 
     public function export(Request $request)
     {
-        return Excel::download(new UsersExport($request->all()), 'users-' . now()->format('d-m-Y') . '.xlsx');
+        return Excel::download(
+            new UsersExport($request->all()),
+            'users-' . now()->format('d-m-Y') . '.xlsx'
+        );
     }
 }
+

@@ -338,25 +338,6 @@
                     </tr>
                 @endforelse
             </tbody>
-            {{-- <tbody>
-                @forelse($attendance->items as $i => $item)
-                    <tr>
-                        <td class="center">{{ $i + 1 }}</td>
-                        <td>
-                            @php
-                                $part = $partsMap[$item->part_number] ?? null;
-                            @endphp
-                        <td class="mono">{{ $item->part_number }}</td>
-                        <td>{{ $part?->deskripsi_part ?? '—' }}</td>
-                        <td>{{ $part?->group?->name ?? '—' }}</td>
-                        <td class="center">{{ $item->quantity }}</td>
-                    </tr>
-                @empty
-                    <tr class="empty-row">
-                        <td colspan="5">Tidak ada part yang dipesan</td>
-                    </tr>
-                @endforelse
-            </tbody> --}}
         </table>
     </div>
 

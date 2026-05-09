@@ -17,32 +17,45 @@ class AttendanceController extends Controller
     // ── List & Filter ─────────────────────────────────────────────────────────
     public function index(Request $request)
     {
-        $query = Attendance::with('user', 'items')
-            ->when(!auth()->user()->isAdmin(), fn($q) => $q->where('user_id', auth()->id()));
+        $user = auth()->user();
+
+        $query = Attendance::with('user', 'items');
+
+        // Kalau tidak punya permission view_all
+        // hanya tampilkan attendance miliknya sendiri
+        if (!$user->can('attendances.view_all')) {
+            $query->where('user_id', $user->id);
+        }
 
         // Search
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('store_name', 'like', '%' . $request->search . '%')
-                  ->orWhere('person_in_charge_name', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('user', fn($u) => $u->where('name', 'like', '%' . $request->search . '%'));
+                ->orWhere('person_in_charge_name', 'like', '%' . $request->search . '%')
+                ->orWhereHas('user', fn($u) =>
+                        $u->where('name', 'like', '%' . $request->search . '%')
+                );
             });
         }
 
-        // Filter by sales (admin only)
-        if ($request->filled('user_id') && auth()->user()->isAdmin()) {
+        // Filter sales
+        if (
+            $request->filled('user_id') &&
+            $user->can('attendances.view_all')
+        ) {
             $query->where('user_id', $request->user_id);
         }
 
-        // Filter by date
+        // Filter date
         if ($request->filled('date')) {
             $query->whereDate('attendance_date', $request->date);
         }
 
-        // Filter by status
+        // Filter status
         if ($request->filled('status')) {
             if ($request->status === 'done') {
-                $query->whereNotNull('checkout_time')->where('is_auto_checkout', false);
+                $query->whereNotNull('checkout_time')
+                    ->where('is_auto_checkout', false);
             } elseif ($request->status === 'ongoing') {
                 $query->whereNull('checkout_time');
             } elseif ($request->status === 'auto_checkout') {
@@ -51,20 +64,88 @@ class AttendanceController extends Controller
         }
 
         // Sort
-        $sortable = ['attendance_date', 'checkin_time', 'store_name', 'work_duration_minutes'];
-        $sort = in_array($request->sort, $sortable) ? $request->sort : 'checkin_time';
-        $dir  = $request->dir === 'asc' ? 'asc' : 'desc';
+        $sortable = [
+            'attendance_date',
+            'checkin_time',
+            'store_name',
+            'work_duration_minutes'
+        ];
+
+        $sort = in_array($request->sort, $sortable)
+            ? $request->sort
+            : 'checkin_time';
+
+        $dir = $request->dir === 'asc' ? 'asc' : 'desc';
+
         $query->orderBy($sort, $dir);
 
-        $attendances = $query->paginate(10)->withQueryString();
+        $attendances = $query
+            ->paginate(10)
+            ->withQueryString();
 
-        // Untuk filter dropdown sales (admin only)
-        $salesList = auth()->user()->isAdmin()
-            ? User::whereHas('role', fn($q) => $q->where('name', 'Sales'))->orderBy('name')->get()
+        // Dropdown sales hanya untuk yang bisa lihat semua
+        $salesList = $user->can('attendances.view_all')
+            ? User::role('Sales')->orderBy('name')->get()
             : collect();
 
-        return view('attendances.index', compact('attendances', 'salesList', 'sort', 'dir'));
+        return view('attendances.index', compact(
+            'attendances',
+            'salesList',
+            'sort',
+            'dir'
+        ));
     }
+    
+    // public function index(Request $request)
+    // {
+    //     $query = Attendance::with('user', 'items')
+    //         ->when(!auth()->user()->isAdmin(), fn($q) => $q->where('user_id', auth()->id()));
+
+    //     // Search
+    //     if ($request->filled('search')) {
+    //         $query->where(function ($q) use ($request) {
+    //             $q->where('store_name', 'like', '%' . $request->search . '%')
+    //               ->orWhere('person_in_charge_name', 'like', '%' . $request->search . '%')
+    //               ->orWhereHas('user', fn($u) => $u->where('name', 'like', '%' . $request->search . '%'));
+    //         });
+    //     }
+
+    //     // Filter by sales (admin only)
+    //     if ($request->filled('user_id') && auth()->user()->isAdmin()) {
+    //         $query->where('user_id', $request->user_id);
+    //     }
+
+    //     // Filter by date
+    //     if ($request->filled('date')) {
+    //         $query->whereDate('attendance_date', $request->date);
+    //     }
+
+    //     // Filter by status
+    //     if ($request->filled('status')) {
+    //         if ($request->status === 'done') {
+    //             $query->whereNotNull('checkout_time')->where('is_auto_checkout', false);
+    //         } elseif ($request->status === 'ongoing') {
+    //             $query->whereNull('checkout_time');
+    //         } elseif ($request->status === 'auto_checkout') {
+    //             $query->where('is_auto_checkout', true);
+    //         }
+    //     }
+
+    //     // Sort
+    //     $sortable = ['attendance_date', 'checkin_time', 'store_name', 'work_duration_minutes'];
+    //     $sort = in_array($request->sort, $sortable) ? $request->sort : 'checkin_time';
+    //     $dir  = $request->dir === 'asc' ? 'asc' : 'desc';
+    //     $query->orderBy($sort, $dir);
+
+    //     $attendances = $query->paginate(10)->withQueryString();
+
+    //     // Untuk filter dropdown sales (admin only)
+    //     $salesList = auth()->user()->isAdmin()
+    //             ? User::role('Sales')->orderBy('name')->get()
+    //             : collect();
+
+    //     return view('attendances.index', compact('attendances', 'salesList', 'sort', 'dir'));
+    // }
 
     // ── Export Excel ─────────────────────────────────────────────────
     public function export(Request $request)
@@ -90,10 +171,10 @@ class AttendanceController extends Controller
     // ── Detail ────────────────────────────────────────────────────────────
     public function show(Attendance $attendance)
     {
-        // Sales hanya bisa lihat miliknya sendiri
-        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
-            abort(403);
-        }
+        // // Sales hanya bisa lihat miliknya sendiri
+        // if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+        //     abort(403);
+        // }
 
         $attendance->load(['user', 'items']);
 
@@ -120,9 +201,9 @@ class AttendanceController extends Controller
     // ── Edit Form ─────────────────────────────────────────────────────────
     public function edit(Attendance $attendance)
     {
-        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
-            abort(403);
-        }
+        // if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+        //     abort(403);
+        // }
 
         $attendance->load(['user', 'items']);
 
@@ -132,9 +213,9 @@ class AttendanceController extends Controller
     // ── Update Attendance ─────────────────────────────────────────────────
     public function update(Request $request, Attendance $attendance)
     {
-        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
-            abort(403);
-        }
+        // if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+        //     abort(403);
+        // }
 
         $request->validate([
             'store_name'             => 'required|string|max:255',
@@ -164,9 +245,9 @@ class AttendanceController extends Controller
     // ── Update Items ──────────────────────────────────────────────────────
     public function updateItems(Request $request, Attendance $attendance)
     {
-        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
-            abort(403);
-        }
+        // if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+        //     abort(403);
+        // }
 
         $request->validate([
             'items'               => 'required|array|min:1',
@@ -217,9 +298,9 @@ class AttendanceController extends Controller
     // ── Delete Attendance ─────────────────────────────────────────────────
     public function destroy(Attendance $attendance)
     {
-        if (!auth()->user()->isAdmin()) {
-            abort(403);
-        }
+        // if (!auth()->user()->isAdmin()) {
+        //     abort(403);
+        // }
 
         // Log activity sebelum delete
         ActivityLog::create([
@@ -324,9 +405,9 @@ class AttendanceController extends Controller
     // ── Generate Invoice (PDF) ─────────────────────────────────────────────────
     public function invoice(Attendance $attendance)
     {
-        if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
-            abort(403);
-        }
+        // if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
+        //     abort(403);
+        // }
 
         $attendance->load(['user', 'items']);
 

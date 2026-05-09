@@ -119,7 +119,59 @@
                     Dashboard
                 </a>
 
-                @if (auth()->user()->isAdmin())
+                {{-- Roles --}}
+                @can('roles.view')
+                    <a href="{{ route('roles.index') }}"
+                        class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
+    {{ request()->routeIs('roles.*') ? 'nav-active' : '' }}">
+                        <span class="nav-icon text-[15px] w-5 text-center">🔐</span>
+                        Roles
+                    </a>
+                @endcan
+
+                @can('users.view')
+                    <a href="{{ route('users.index') }}"
+                        class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
+    {{ request()->routeIs('users.*') ? 'nav-active' : '' }}">
+                        <span class="nav-icon text-[15px] w-5 text-center">👥</span>
+                        Users
+                    </a>
+                @endcan
+
+                @can('attendances.view')
+                    <a href="{{ route('attendances.index') }}"
+                        class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
+    {{ request()->routeIs('attendances.*') ? 'nav-active' : '' }}">
+                        <span class="nav-icon text-[15px] w-5 text-center">📋</span>
+                        Absensi
+                    </a>
+                @endcan
+
+                @can('part-groups.view')
+                    <a href="{{ route('part-groups.index') }}"
+                        class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
+    {{ request()->routeIs('part-groups.*') ? 'nav-active' : '' }}">
+                        <span class="nav-icon text-[15px] w-5 text-center">📂</span>
+                        Group Part
+                    </a>
+                @endcan
+
+                @can('parts.view')
+                    <a href="{{ route('parts.index') }}"
+                        class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
+    {{ request()->routeIs('parts.*') ? 'nav-active' : '' }}">
+                        <span class="nav-icon text-[15px] w-5 text-center">🔧</span>
+                        Master Part
+                    </a>
+                @endcan
+
+                {{-- @if (auth()->user()->isAdmin())
+                    <a href="{{ route('roles.index') }}"
+                        class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
+               {{ request()->routeIs('roles.*') ? 'nav-active' : '' }}">
+                        <span class="nav-icon text-[15px] w-5 text-center">🔑</span>
+                        Roles
+                    </a>
                     <a href="{{ route('users.index') }}"
                         class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
                {{ request()->routeIs('users.*') ? 'nav-active' : '' }}">
@@ -158,7 +210,7 @@
                             {{ $ongoingCount }}
                         </span>
                     @endif
-                </a>
+                </a> --}}
             </nav>
 
             {{-- User card --}}
@@ -171,7 +223,7 @@
                     </div>
                     <div class="min-w-0">
                         <div class="text-[13px] font-600 text-slate-800 truncate">{{ auth()->user()->name }}</div>
-                        <div class="text-[11px] text-slate-400">{{ auth()->user()->role->name }}</div>
+                        {{-- <div class="text-[11px] text-slate-400">{{ auth()->user()->role->name }}</div> --}}
                     </div>
                 </div>
             </div>
@@ -216,7 +268,7 @@
                         class="dropdown-menu absolute top-[calc(100%+8px)] right-0 bg-white border-[1.5px] border-slate-200 rounded-xl min-w-[200px] shadow-xl shadow-slate-200/60 overflow-hidden z-50">
                         <div class="px-4 py-3 border-b border-slate-100">
                             <div class="text-[13px] font-bold text-slate-800">{{ auth()->user()->name }}</div>
-                            <div class="text-[11px] text-slate-400 mt-0.5">{{ auth()->user()->role->name }}</div>
+                            {{-- <div class="text-[11px] text-slate-400 mt-0.5">{{ auth()->user()->role->name }}</div> --}}
                         </div>
                         <a href="{{ route('profile.show') }}"
                             class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors cursor-pointer">
