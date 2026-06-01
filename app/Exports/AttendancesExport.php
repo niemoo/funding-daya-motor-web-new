@@ -292,7 +292,7 @@ class AttendancesItemsSheet implements FromQuery, WithHeadings, WithMapping, Wit
                 $att->attendance_date->format('d/m/Y'),
                 $att->user->name ?? 'User Telah Dihapus',
                 $att->store_name,
-                $item->part_number,
+                $item->kode_part,
                 $item->quantity,
                 $item->notes ?? '—',
             ];

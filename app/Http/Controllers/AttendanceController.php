@@ -95,57 +95,6 @@ class AttendanceController extends Controller
             'dir'
         ));
     }
-    
-    // public function index(Request $request)
-    // {
-    //     $query = Attendance::with('user', 'items')
-    //         ->when(!auth()->user()->isAdmin(), fn($q) => $q->where('user_id', auth()->id()));
-
-    //     // Search
-    //     if ($request->filled('search')) {
-    //         $query->where(function ($q) use ($request) {
-    //             $q->where('store_name', 'like', '%' . $request->search . '%')
-    //               ->orWhere('person_in_charge_name', 'like', '%' . $request->search . '%')
-    //               ->orWhereHas('user', fn($u) => $u->where('name', 'like', '%' . $request->search . '%'));
-    //         });
-    //     }
-
-    //     // Filter by sales (admin only)
-    //     if ($request->filled('user_id') && auth()->user()->isAdmin()) {
-    //         $query->where('user_id', $request->user_id);
-    //     }
-
-    //     // Filter by date
-    //     if ($request->filled('date')) {
-    //         $query->whereDate('attendance_date', $request->date);
-    //     }
-
-    //     // Filter by status
-    //     if ($request->filled('status')) {
-    //         if ($request->status === 'done') {
-    //             $query->whereNotNull('checkout_time')->where('is_auto_checkout', false);
-    //         } elseif ($request->status === 'ongoing') {
-    //             $query->whereNull('checkout_time');
-    //         } elseif ($request->status === 'auto_checkout') {
-    //             $query->where('is_auto_checkout', true);
-    //         }
-    //     }
-
-    //     // Sort
-    //     $sortable = ['attendance_date', 'checkin_time', 'store_name', 'work_duration_minutes'];
-    //     $sort = in_array($request->sort, $sortable) ? $request->sort : 'checkin_time';
-    //     $dir  = $request->dir === 'asc' ? 'asc' : 'desc';
-    //     $query->orderBy($sort, $dir);
-
-    //     $attendances = $query->paginate(10)->withQueryString();
-
-    //     // Untuk filter dropdown sales (admin only)
-    //     $salesList = auth()->user()->isAdmin()
-    //             ? User::role('Sales')->orderBy('name')->get()
-    //             : collect();
-
-    //     return view('attendances.index', compact('attendances', 'salesList', 'sort', 'dir'));
-    // }
 
     // ── Export Excel ─────────────────────────────────────────────────
     public function export(Request $request)
@@ -251,12 +200,12 @@ class AttendanceController extends Controller
 
         $request->validate([
             'items'               => 'required|array|min:1',
-            'items.*.part_number' => 'required|string|max:100',
+            'items.*.kode_part' => 'required|string|max:100',
             'items.*.quantity'    => 'required|integer|min:1',
             'items.*.notes'       => 'nullable|string|max:255',
         ], [
             'items.required'               => 'Minimal 1 item harus diisi.',
-            'items.*.part_number.required' => 'Nomor part wajib diisi.',
+            'items.*.kode_part.required' => 'Nomor part wajib diisi.',
             'items.*.quantity.required'    => 'Quantity wajib diisi.',
             'items.*.quantity.integer'     => 'Quantity harus berupa angka bulat.',
             'items.*.quantity.min'         => 'Quantity minimal 1.',
@@ -266,17 +215,17 @@ class AttendanceController extends Controller
         $oldItems = $attendance->items()
             ->get()
             ->map(fn($i) => [
-                'part_number' => $i->part_number,
+                'kode_part' => $i->kode_part,
                 'quantity'    => $i->quantity,
                 'notes'       => $i->notes,
             ])
             ->toArray();
 
-        // Gabungkan duplikat part_number
+        // Gabungkan duplikat kode_part
         $newItems = collect($request->items)
-            ->groupBy('part_number')
-            ->map(fn($group, $partNumber) => [
-                'part_number' => $partNumber,
+            ->groupBy('kode_part')
+            ->map(fn($group, $kodePart) => [
+                'kode_part' => $kodePart,
                 'quantity'    => $group->sum('quantity'),
                 'notes'       => $group->last()['notes'] ?? null,
             ])
@@ -371,7 +320,7 @@ class AttendanceController extends Controller
 
         $request->validate([
             'items'               => 'required|array|min:1',
-            'items.*.part_number' => 'required|string|max:100',
+            'items.*.kode_part' => 'required|string|max:100',
             'items.*.quantity'    => 'required|integer|min:1',
             'items.*.notes'       => 'nullable|string|max:255',
         ]);
@@ -380,7 +329,7 @@ class AttendanceController extends Controller
         $oldItems = $attendance->items()
             ->get()
             ->map(fn($i) => [
-                'part_number' => $i->part_number,
+                'kode_part' => $i->kode_part,
                 'quantity'    => $i->quantity,
                 'notes'       => $i->notes,
             ])
@@ -412,7 +361,7 @@ class AttendanceController extends Controller
         $attendance->load(['user', 'items']);
 
         // Ambil semua kode_part dari items attendance ini
-        $kodeParts = $attendance->items->pluck('part_number')->unique();
+        $kodeParts = $attendance->items->pluck('kode_part')->unique();
 
         // Query semua part sekaligus, key by kode_part untuk akses O(1)
         $partsMap = \App\Models\Part::with('group')

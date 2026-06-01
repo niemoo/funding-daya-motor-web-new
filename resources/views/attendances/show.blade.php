@@ -245,7 +245,7 @@
                                 <tr class="hover:bg-brand-50/30 transition-colors">
                                     <td class="px-5 py-3 text-[12px] text-slate-400">{{ $i + 1 }}</td>
                                     <td class="px-5 py-3 text-[13px] font-semibold text-slate-800 font-mono">
-                                        {{ $item->part_number }}</td>
+                                        {{ $item->kode_part }}</td>
                                     <td class="px-5 py-3 text-center">
                                         <span
                                             class="text-[13px] font-bold text-brand-600">{{ $item->quantity }}</span>
@@ -304,7 +304,7 @@
                                                             @if (is_array($change['old_value']) && count($change['old_value']) > 0)
                                                                 @foreach ($change['old_value'] as $oldItem)
                                                                     <div class="text-[11px] text-slate-500 font-mono">
-                                                                        {{ $oldItem['part_number'] }} ×
+                                                                        {{ $oldItem['kode_part'] }} ×
                                                                         {{ $oldItem['quantity'] }}
                                                                     </div>
                                                                 @endforeach
@@ -320,7 +320,7 @@
                                                                 @foreach ($change['new_value'] as $newItem)
                                                                     <div
                                                                         class="text-[11px] text-slate-800 font-mono font-semibold">
-                                                                        {{ $newItem['part_number'] }} ×
+                                                                        {{ $newItem['kode_part'] }} ×
                                                                         {{ $newItem['quantity'] }}
                                                                     </div>
                                                                 @endforeach

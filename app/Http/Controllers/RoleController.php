@@ -15,9 +15,10 @@ class RoleController extends Controller
             'Dashboard'   => ['dashboard.view'],
             'Users'       => ['users.view', 'users.create', 'users.edit', 'users.delete', 'users.export'],
             'Roles'       => ['roles.view', 'roles.create', 'roles.edit', 'roles.delete'],
-            'Attendances' => ['attendances.view', 'attendances.view_all', 'attendances.edit', 'attendances.delete', 'attendances.export', 'attendances.invoice'],
+            'Absensi' => ['attendances.view', 'attendances.view_all', 'attendances.edit', 'attendances.delete', 'attendances.export', 'attendances.invoice'],
+            'Grup Part' => ['part-groups.view', 'part-groups.create', 'part-groups.edit', 'part-groups.delete'],
             'Parts'       => ['parts.view', 'parts.create', 'parts.edit', 'parts.delete', 'parts.import'],
-            'Part Groups' => ['part-groups.view', 'part-groups.create', 'part-groups.edit', 'part-groups.delete'],
+            'Toko Umum' => ['general-stores.view', 'general-stores.create', 'general-stores.edit', 'general-stores.delete', 'general-stores.import'],
             'Profile'     => ['profile.view'],
         ];
     }

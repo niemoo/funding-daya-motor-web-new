@@ -50,15 +50,15 @@ class AttendanceItemsSheetImport implements ToCollection, WithStartRow
 
         foreach ($rows as $index => $row) {
             $rowNum     = $index + 2;
-            $partNumber = trim((string) ($row[1] ?? ''));
+            $kodePart = trim((string) ($row[1] ?? ''));
             $quantity   = $row[2] ?? null;
             $notes      = trim((string) ($row[3] ?? '')) ?: null;
 
             // Skip baris kosong
-            if (empty($partNumber) && $quantity === null) continue;
+            if (empty($kodePart) && $quantity === null) continue;
 
-            // Validasi part_number
-            if (empty($partNumber)) {
+            // Validasi kode_part
+            if (empty($kodePart)) {
                 $this->warnings[] = "Baris {$rowNum}: Nomor part kosong, dilewati.";
                 continue;
             }
@@ -69,12 +69,12 @@ class AttendanceItemsSheetImport implements ToCollection, WithStartRow
                 continue;
             }
 
-            // Gabungkan duplikat part_number
-            if (isset($merged[$partNumber])) {
-                $merged[$partNumber]['quantity'] += intval($quantity);
+            // Gabungkan duplikat kode_part
+            if (isset($merged[$kodePart])) {
+                $merged[$kodePart]['quantity'] += intval($quantity);
             } else {
-                $merged[$partNumber] = [
-                    'part_number' => $partNumber,
+                $merged[$kodePart] = [
+                    'kode_part' => $kodePart,
                     'quantity'    => intval($quantity),
                     'notes'       => $notes,
                 ];

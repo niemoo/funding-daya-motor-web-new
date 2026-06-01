@@ -24,7 +24,7 @@ class AttendanceItemController extends Controller
 
         $items = $attendance->items()->orderBy('id')->get()->map(fn($item) => [
             'id'          => $item->id,
-            'part_number' => $item->part_number,
+            'kode_part' => $item->kode_part,
             'quantity'    => $item->quantity,
             'notes'       => $item->notes,
         ]);
@@ -53,23 +53,23 @@ class AttendanceItemController extends Controller
 
         $request->validate([
             'items'               => 'required|array|min:1',
-            'items.*.part_number' => 'required|string|max:100',
+            'items.*.kode_part' => 'required|string|max:100',
             'items.*.quantity'    => 'required|integer|min:1',
             'items.*.notes'       => 'nullable|string|max:255',
         ], [
             'items.required'               => 'Data items wajib diisi.',
             'items.min'                    => 'Minimal 1 item harus diisi.',
-            'items.*.part_number.required' => 'Nomor part wajib diisi.',
+            'items.*.kode_part.required' => 'Nomor part wajib diisi.',
             'items.*.quantity.required'    => 'Quantity wajib diisi.',
             'items.*.quantity.integer'     => 'Quantity harus berupa angka bulat.',
             'items.*.quantity.min'         => 'Quantity minimal 1.',
         ]);
 
-        // Gabungkan duplikat part_number
+        // Gabungkan duplikat kode_part
         $merged = collect($request->items)
-            ->groupBy('part_number')
-            ->map(fn($group, $partNumber) => [
-                'part_number' => (string) $partNumber,
+            ->groupBy('kode_part')
+            ->map(fn($group, $kodePart) => [
+                'kode_part' => (string) $kodePart,
                 'quantity'    => $group->sum('quantity'),
                 'notes'       => $group->last()['notes'] ?? null,
             ])

@@ -13,6 +13,7 @@ class Part extends Model
         'part_group_id',
         'kode_part',
         'deskripsi_part',
+        'het',
     ];
 
     public function group()

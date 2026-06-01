@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GeneralStoreController;
 use App\Http\Controllers\PartController;
 use App\Http\Controllers\PartGroupController;
 use App\Http\Controllers\ProfileController;
@@ -132,6 +133,12 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/part-groups/{part_group}', [PartGroupController::class, 'destroy'])
         ->name('part-groups.destroy')
         ->middleware('permission:part-groups.delete');
+
+    Route::get('/general-stores/import/progress', [GeneralStoreController::class, 'importProgress'])->name('general-stores.import.progress');
+    Route::post('/general-stores/import', [GeneralStoreController::class, 'importExcel'])->name('general-stores.import')->middleware('permission:general-stores.import');
+    Route::middleware('permission:general-stores.view')->group(function () {
+        Route::resource('general-stores', GeneralStoreController::class)->except(['show']);
+    });
 
  
     // Profile

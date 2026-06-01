@@ -50,6 +50,13 @@ class PermissionSeeder extends Seeder
             'part-groups.edit',
             'part-groups.delete',
 
+            // General Stores
+            'general-stores.view',
+            'general-stores.create',
+            'general-stores.edit',
+            'general-stores.delete',
+            'general-stores.import',
+
             // Profile
             'profile.view',
         ];
@@ -65,17 +72,18 @@ class PermissionSeeder extends Seeder
         }
 
         // Assign permission dasar ke role Sales
-        $sales = Role::where('name', 'Sales')->first();
-        if ($sales) {
-            $sales->syncPermissions([
-                'dashboard.view',
-                'attendances.view',
-                'attendances.export',
-                'attendances.invoice',
-                'parts.view',
-                'part-groups.view',
-                'profile.view',
-            ]);
-        }
+        // $sales = Role::where('name', 'Sales')->first();
+        // if ($sales) {
+        //     $sales->syncPermissions([
+        //         'dashboard.view',
+        //         'attendances.view',
+        //         'attendances.export',
+        //         'attendances.invoice',
+        //         'parts.view',
+        //         'part-groups.view',
+        //         'general-stores.view',
+        //         'profile.view',
+        //     ]);
+        // }
     }
 }

@@ -17,14 +17,14 @@ class AttendanceItemSeeder extends Seeder
         $attendances = Attendance::whereNotNull('checkout_time')->get();
 
         $sampleParts = [
-            ['part_number' => 'BP-001', 'quantity' => 5, 'notes' => null],
-            ['part_number' => 'BP-002', 'quantity' => 3, 'notes' => 'Urgent'],
-            ['part_number' => 'SK-101', 'quantity' => 10, 'notes' => null],
-            ['part_number' => 'SK-102', 'quantity' => 2, 'notes' => 'Cek stok dulu'],
-            ['part_number' => 'FR-201', 'quantity' => 7, 'notes' => null],
-            ['part_number' => 'FR-202', 'quantity' => 4, 'notes' => 'Request tambahan'],
-            ['part_number' => 'OL-301', 'quantity' => 6, 'notes' => null],
-            ['part_number' => 'OL-302', 'quantity' => 1, 'notes' => 'Sample'],
+            ['kode_part' => 'BP-001', 'quantity' => 5, 'notes' => null],
+            ['kode_part' => 'BP-002', 'quantity' => 3, 'notes' => 'Urgent'],
+            ['kode_part' => 'SK-101', 'quantity' => 10, 'notes' => null],
+            ['kode_part' => 'SK-102', 'quantity' => 2, 'notes' => 'Cek stok dulu'],
+            ['kode_part' => 'FR-201', 'quantity' => 7, 'notes' => null],
+            ['kode_part' => 'FR-202', 'quantity' => 4, 'notes' => 'Request tambahan'],
+            ['kode_part' => 'OL-301', 'quantity' => 6, 'notes' => null],
+            ['kode_part' => 'OL-302', 'quantity' => 1, 'notes' => 'Sample'],
         ];
 
         foreach ($attendances as $attendance) {
@@ -34,7 +34,7 @@ class AttendanceItemSeeder extends Seeder
             foreach ($parts as $part) {
                 AttendanceItem::create([
                     'attendance_id' => $attendance->id,
-                    'part_number'   => $part['part_number'],
+                    'kode_part'   => $part['kode_part'],
                     'quantity'      => $part['quantity'],
                     'notes'         => $part['notes'],
                 ]);

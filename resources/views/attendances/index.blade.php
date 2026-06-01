@@ -368,7 +368,7 @@
                                                                 {{ $i + 1 }}</td>
                                                             <td
                                                                 class="px-4 py-2.5 text-[13px] font-semibold text-slate-800 font-mono">
-                                                                {{ $item->part_number }}</td>
+                                                                {{ $item->kode_part }}</td>
                                                             <td class="px-4 py-2.5 text-center">
                                                                 <span
                                                                     class="text-[13px] font-bold text-brand-600">{{ $item->quantity }}</span>

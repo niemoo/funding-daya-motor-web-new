@@ -175,6 +175,16 @@
             font-size: 11px;
         }
 
+        tbody td.right {
+            text-align: right;
+        }
+
+        .total-row td {
+            font-weight: bold;
+            background-color: #EBF3FC;
+            border-top: 2px solid #1D61AF;
+        }
+
         .empty-row td {
             padding: 20px 12px;
             text-align: center;
@@ -320,23 +330,49 @@
                     <th>Deskripsi Part</th>
                     <th style="width: 100px;">Group</th>
                     <th style="width: 60px;" class="center">Qty</th>
+                    <th style="width: 90px;" class="center">HET (Rp)</th>
+                    <th style="width: 100px;" class="center">Total (Rp)</th>
                 </tr>
             </thead>
             <tbody>
+                @php $grandTotal = 0; @endphp
                 @forelse($attendance->items as $i => $item)
-                    @php $part = $partsMap[$item->part_number] ?? null; @endphp
+                    @php
+                        $part = $partsMap[$item->kode_part] ?? null;
+                        $het = $part?->het ?? 0;
+                        $subtotal = $het * $item->quantity;
+                        $grandTotal += $subtotal;
+                    @endphp
                     <tr>
                         <td class="center">{{ $i + 1 }}</td>
-                        <td class="mono">{{ $item->part_number }}</td>
+                        <td class="mono">{{ $item->kode_part }}</td>
                         <td>{{ $part?->deskripsi_part ?? '—' }}</td>
                         <td>{{ $part?->group?->name ?? '—' }}</td>
                         <td class="center">{{ $item->quantity }}</td>
+                        <td class="right">
+                            {{ $het ? number_format($het, 0, ',', '.') : '—' }}
+                        </td>
+                        <td class="right">
+                            {{ $subtotal ? number_format($subtotal, 0, ',', '.') : '—' }}
+                        </td>
                     </tr>
                 @empty
                     <tr class="empty-row">
-                        <td colspan="5">Tidak ada part yang dipesan</td>
+                        <td colspan="7">Tidak ada part yang dipesan</td>
                     </tr>
                 @endforelse
+
+                {{-- Grand Total --}}
+                @if ($attendance->items->count() > 0)
+                    <tr class="total-row">
+                        <td colspan="6" style="text-align: right; padding-right: 12px;">
+                            Total Keseluruhan
+                        </td>
+                        <td class="right">
+                            {{ number_format($grandTotal, 0, ',', '.') }}
+                        </td>
+                    </tr>
+                @endif
             </tbody>
         </table>
     </div>
@@ -355,11 +391,11 @@
             <div class="signature-line">(__________________________________________)</div>
         </div>
         <div class="signature-col">
-            <div class="signature-title">Kepala Bengkel</div>
+            <div class="signature-title">Pejabat Cabang</div>
             <div class="signature-line">(__________________________________________)</div>
         </div>
         <div class="signature-col">
-            <div class="signature-title">Administration Head / Kepala Cabang</div>
+            <div class="signature-title">Security</div>
             <div class="signature-line">(__________________________________________)</div>
         </div>
     </div>

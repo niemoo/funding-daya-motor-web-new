@@ -101,7 +101,7 @@ class ImportPartsCommand extends Command
                 Part::upsert(
                     $toInsert,
                     ['kode_part'],                              // unique key
-                    ['deskripsi_part', 'part_group_id', 'updated_at'] // kolom yang diupdate
+                    ['deskripsi_part', 'het', 'part_group_id', 'updated_at'] // kolom yang diupdate
                 );
                 $inserted += count($toInsert);
             }

@@ -161,56 +161,18 @@
                         class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
     {{ request()->routeIs('parts.*') ? 'nav-active' : '' }}">
                         <span class="nav-icon text-[15px] w-5 text-center">🔧</span>
-                        Master Part
+                        Parts
                     </a>
                 @endcan
 
-                {{-- @if (auth()->user()->isAdmin())
-                    <a href="{{ route('roles.index') }}"
+                @can('general-stores.view')
+                    <a href="{{ route('general-stores.index') }}"
                         class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
-               {{ request()->routeIs('roles.*') ? 'nav-active' : '' }}">
-                        <span class="nav-icon text-[15px] w-5 text-center">🔑</span>
-                        Roles
+    {{ request()->routeIs('general-stores.*') ? 'nav-active' : '' }}">
+                        <span class="nav-icon text-[15px] w-5 text-center">🏪</span>
+                        Toko Umum
                     </a>
-                    <a href="{{ route('users.index') }}"
-                        class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
-               {{ request()->routeIs('users.*') ? 'nav-active' : '' }}">
-                        <span class="nav-icon text-[15px] w-5 text-center">👥</span>
-                        Users
-                    </a>
-                @endif
-
-                <a href="{{ route('part-groups.index') }}"
-                    class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
-        {{ request()->routeIs('part-groups.*') ? 'nav-active' : '' }}">
-                    <span class="nav-icon text-[15px] w-5 text-center">📂</span>
-                    Group Part
-                </a>
-
-                <a href="{{ route('parts.index') }}"
-                    class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
-        {{ request()->routeIs('parts.*') ? 'nav-active' : '' }}">
-                    <span class="nav-icon text-[15px] w-5 text-center">🔧</span>
-                    Master Part
-                </a>
-
-                <a href="{{ route('attendances.index') }}"
-                    class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
-               {{ request()->routeIs('attendances.*') ? 'nav-active' : '' }}">
-                    <span class="nav-icon text-[15px] w-5 text-center">📋</span>
-                    <span class="flex-1">Absensi</span>
-                    @php
-                        $ongoingCount = \App\Models\Attendance::whereNull('checkout_time')
-                            ->whereDate('attendance_date', today())
-                            ->when(!auth()->user()->isAdmin(), fn($q) => $q->where('user_id', auth()->id()))
-                            ->count();
-                    @endphp
-                    @if ($ongoingCount > 0)
-                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-brand-600 text-white">
-                            {{ $ongoingCount }}
-                        </span>
-                    @endif
-                </a> --}}
+                @endcan
             </nav>
 
             {{-- User card --}}

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Part;
 use App\Jobs\ImportPartsJob;
+use App\Models\PartGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
@@ -30,20 +31,26 @@ class PartController extends Controller
             $query->where('part_group_id', $request->group_id);
         }
 
-        $sortable = ['kode_part', 'deskripsi_part', 'created_at'];
+        $sortable = ['kode_part', 'deskripsi_part', 'het', 'created_at', 'group'];
         $sort = in_array($request->sort, $sortable) ? $request->sort : 'kode_part';
         $dir  = $request->dir === 'desc' ? 'desc' : 'asc';
-        $query->orderBy($sort, $dir);
+        if ($sort === 'group') {
+            $query->leftJoin('part_groups', 'parts.part_group_id', '=', 'part_groups.id')
+                ->select('parts.*')
+                ->orderBy('part_groups.name', $dir);
+        } else {
+            $query->orderBy($sort, $dir);
+        }
 
         $parts  = $query->paginate(15)->withQueryString();
-        $groups = \App\Models\PartGroup::orderBy('name')->get();
+        $groups = PartGroup::orderBy('name')->get();
 
         return view('parts.index', compact('parts', 'groups', 'sort', 'dir'));
     }
 
     public function create()
     {
-        $groups = \App\Models\PartGroup::orderBy('name')->get();
+        $groups = PartGroup::orderBy('name')->get();
         return view('parts.create', compact('groups'));
     }
 
@@ -53,15 +60,18 @@ class PartController extends Controller
             'kode_part'      => 'required|string|max:100|unique:parts,kode_part',
             'deskripsi_part' => 'required|string|max:255',
             'part_group_id'  => 'required|exists:part_groups,id',
+            'het'            => 'nullable|integer|min:0',
         ], [
             'kode_part.required'      => 'Kode part wajib diisi.',
             'kode_part.unique'        => 'Kode part sudah terdaftar.',
             'deskripsi_part.required' => 'Deskripsi part wajib diisi.',
             'part_group_id.required'  => 'Group wajib dipilih.',
             'part_group_id.exists'    => 'Group tidak valid.',
+            'het.integer'             => 'HET harus berupa angka.',
+            'het.min'                 => 'HET tidak boleh negatif.',
         ]);
 
-        Part::create($request->only(['kode_part', 'deskripsi_part', 'part_group_id']));
+        Part::create($request->only(['kode_part', 'deskripsi_part', 'part_group_id', 'het']));
 
         return redirect()->route('parts.index')
             ->with('success', 'Part berhasil ditambahkan.');
@@ -69,7 +79,7 @@ class PartController extends Controller
 
     public function edit(Part $part)
     {
-        $groups = \App\Models\PartGroup::orderBy('name')->get();
+        $groups = PartGroup::orderBy('name')->get();
         return view('parts.edit', compact('part', 'groups'));
     }
 
@@ -79,96 +89,22 @@ class PartController extends Controller
             'kode_part'      => 'required|string|max:100|unique:parts,kode_part,' . $part->id,
             'deskripsi_part' => 'required|string|max:255',
             'part_group_id'  => 'required|exists:part_groups,id',
+            'het'            => 'nullable|integer|min:0',
         ], [
             'kode_part.required'      => 'Kode part wajib diisi.',
             'kode_part.unique'        => 'Kode part sudah terdaftar.',
             'deskripsi_part.required' => 'Deskripsi part wajib diisi.',
             'part_group_id.required'  => 'Group wajib dipilih.',
             'part_group_id.exists'    => 'Group tidak valid.',
+            'het.integer'             => 'HET harus berupa angka.',
+            'het.min'                 => 'HET tidak boleh negatif.',
         ]);
 
-        $part->update($request->only(['kode_part', 'deskripsi_part', 'part_group_id']));
+        $part->update($request->only(['kode_part', 'deskripsi_part', 'part_group_id', 'het']));
 
         return redirect()->route('parts.index')
             ->with('success', 'Part berhasil diperbarui.');
     }
-    
-    // public function index(Request $request)
-    // {
-    //     $query = Part::query();
-
-    //     if ($request->filled('search')) {
-    //         $query->where(function ($q) use ($request) {
-    //             $q->where('kode_part', 'like', '%' . $request->search . '%')
-    //               ->orWhere('deskripsi_part', 'like', '%' . $request->search . '%')
-    //               ->orWhere('group', 'like', '%' . $request->search . '%');
-    //         });
-    //     }
-
-    //     if ($request->filled('group')) {
-    //         $query->where('group', $request->group);
-    //     }
-
-    //     $sortable = ['kode_part', 'deskripsi_part', 'group', 'created_at'];
-    //     $sort = in_array($request->sort, $sortable) ? $request->sort : 'kode_part';
-    //     $dir  = $request->dir === 'desc' ? 'desc' : 'asc';
-    //     $query->orderBy($sort, $dir);
-
-    //     $parts  = $query->paginate(15)->withQueryString();
-    //     $groups = Part::distinct()->orderBy('group')->pluck('group');
-
-    //     return view('parts.index', compact('parts', 'groups', 'sort', 'dir'));
-    // }
-
-    // public function create()
-    // {
-    //     $groups = Part::distinct()->orderBy('group')->pluck('group');
-    //     return view('parts.create', compact('groups'));
-    // }
-
-    // public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'kode_part'     => 'required|string|max:100|unique:parts,kode_part',
-    //         'deskripsi_part'=> 'required|string|max:255',
-    //         'group'         => 'required|string|max:100',
-    //     ], [
-    //         'kode_part.required'      => 'Kode part wajib diisi.',
-    //         'kode_part.unique'        => 'Kode part sudah terdaftar.',
-    //         'deskripsi_part.required' => 'Deskripsi part wajib diisi.',
-    //         'group.required'          => 'Group wajib diisi.',
-    //     ]);
-
-    //     Part::create($request->only(['kode_part', 'deskripsi_part', 'group']));
-
-    //     return redirect()->route('parts.index')
-    //         ->with('success', 'Part berhasil ditambahkan.');
-    // }
-
-    // public function edit(Part $part)
-    // {
-    //     $groups = Part::distinct()->orderBy('group')->pluck('group');
-    //     return view('parts.edit', compact('part', 'groups'));
-    // }
-
-    // public function update(Request $request, Part $part)
-    // {
-    //     $request->validate([
-    //         'kode_part'     => 'required|string|max:100|unique:parts,kode_part,' . $part->id,
-    //         'deskripsi_part'=> 'required|string|max:255',
-    //         'group'         => 'required|string|max:100',
-    //     ], [
-    //         'kode_part.required'      => 'Kode part wajib diisi.',
-    //         'kode_part.unique'        => 'Kode part sudah terdaftar.',
-    //         'deskripsi_part.required' => 'Deskripsi part wajib diisi.',
-    //         'group.required'          => 'Group wajib diisi.',
-    //     ]);
-
-    //     $part->update($request->only(['kode_part', 'deskripsi_part', 'group']));
-
-    //     return redirect()->route('parts.index')
-    //         ->with('success', 'Part berhasil diperbarui.');
-    // }
 
     public function destroy(Part $part)
     {
@@ -196,6 +132,7 @@ class PartController extends Controller
         };
 
         ini_set('memory_limit', '512M');
+        \Log::info('Memory limit: ' . ini_get('memory_limit'));
         Excel::import($import, $request->file('file'));
 
         $rows = collect($import->rows)

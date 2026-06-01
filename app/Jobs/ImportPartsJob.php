@@ -38,6 +38,9 @@ class ImportPartsJob implements ShouldQueue
             $kodePart      = trim((string)($row[1] ?? ''));
             $deskripsiPart = trim((string)($row[2] ?? ''));
             $groupName     = trim((string)($row[3] ?? ''));
+            $hetRaw = trim((string)($row[4] ?? ''));
+            $hetClean = preg_replace('/[\.\s]/', '', $hetRaw);
+            $het = is_numeric($hetClean) && $hetClean > 0 ? (int)$hetClean : null;
 
             if (empty($kodePart)) continue;
 
@@ -51,6 +54,7 @@ class ImportPartsJob implements ShouldQueue
                 'kode_part'      => $kodePart,
                 'deskripsi_part' => $deskripsiPart ?: '—',
                 'part_group_id'  => $groupName ? ($groupMap[$groupName] ?? null) : null,
+                'het'            => $het,
                 'created_at'     => now(),
                 'updated_at'     => now(),
             ];
@@ -60,7 +64,7 @@ class ImportPartsJob implements ShouldQueue
             Part::upsert(
                 $toUpsert,
                 ['kode_part'],
-                ['deskripsi_part', 'part_group_id', 'updated_at']
+                ['deskripsi_part', 'het', 'part_group_id', 'updated_at']
             );
         }
 

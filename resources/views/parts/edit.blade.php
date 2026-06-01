@@ -40,6 +40,26 @@
                 </div>
 
                 <div>
+                    <label class="block text-[12px] font-semibold text-slate-600 mb-1.5">
+                        HET
+                    </label>
+
+                    <input type="text" inputmode="numeric" name="het_display" id="het_display"
+                        value="{{ number_format(old('het', $part->het), 0, ',', '.') }}" placeholder="Contoh: 100.000"
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[13px] text-slate-800 outline-none transition-all placeholder-slate-400
+        {{ $errors->has('het')
+            ? 'border-rose-400 focus:ring-2 focus:ring-rose-50'
+            : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
+
+                    {{-- value asli yang dikirim ke backend --}}
+                    <input type="hidden" name="het" id="het" value="{{ old('het', $part->het) }}">
+
+                    @error('het')
+                        <p class="mt-1.5 text-[12px] text-rose-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
                     <label class="block text-[12px] font-semibold text-slate-600 mb-1.5">Group</label>
                     <select name="part_group_id"
                         class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[13px] text-slate-800 outline-none transition-all
@@ -72,4 +92,32 @@
         </div>
     </div>
 
+    @push('scripts')
+        <script>
+            const hetDisplay = document.getElementById('het_display');
+            const hetHidden = document.getElementById('het');
+
+            function formatHet(value) {
+                value = value.replace(/\D/g, '');
+
+                if (value === '') {
+                    hetHidden.value = '';
+                    return '';
+                }
+
+                value = Math.max(0, parseInt(value));
+
+                hetHidden.value = value;
+
+                return new Intl.NumberFormat('id-ID').format(value);
+            }
+
+            hetDisplay.addEventListener('input', function() {
+                this.value = formatHet(this.value);
+            });
+
+            // format ulang saat halaman pertama dibuka
+            hetDisplay.value = formatHet(hetDisplay.value);
+        </script>
+    @endpush
 </x-layouts.app>

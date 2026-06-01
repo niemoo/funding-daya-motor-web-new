@@ -1,4 +1,4 @@
-<x-layouts.app title="Parts">
+<x-layouts.app title="Toko Umum">
 
     {{-- Delete Modal --}}
     <div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4"
@@ -6,9 +6,9 @@
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div class="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-2xl mx-auto mb-4">🗑️
             </div>
-            <h3 class="text-[16px] font-bold text-slate-800 text-center mb-1">Hapus Part</h3>
+            <h3 class="text-[16px] font-bold text-slate-800 text-center mb-1">Hapus Toko</h3>
             <p class="text-[13px] text-slate-400 text-center mb-1">Apakah kamu yakin ingin menghapus</p>
-            <p id="modal-part-name" class="text-[14px] font-bold text-slate-700 text-center mb-4">—</p>
+            <p id="modal-store-name" class="text-[14px] font-bold text-slate-700 text-center mb-4">—</p>
             <p class="text-[12px] text-rose-400 text-center mb-5 bg-rose-50 rounded-xl py-2 px-3">
                 ⚠️ Tindakan ini tidak dapat dibatalkan
             </p>
@@ -32,61 +32,43 @@
     {{-- Page Header --}}
     <div class="flex items-start justify-between mb-5 gap-4">
         <div>
-            <h1 class="text-[20px] font-extrabold text-slate-800 tracking-tight">Parts</h1>
-            <p class="text-[13px] text-slate-400 mt-1">Total {{ $parts->total() }} part terdaftar</p>
+            <h1 class="text-[20px] font-extrabold text-slate-800 tracking-tight">Toko Umum</h1>
+            <p class="text-[13px] text-slate-400 mt-1">Total {{ $stores->total() }} toko terdaftar</p>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-            <a href="https://www.hondamotopub.com/AHJ" target="_blank" rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-100 hover:bg-blue-200 text-blue-700 text-[13px] font-semibold rounded-[10px] transition-all">
-                📖 Lihat Katalog
-            </a>
-            @can('parts.import')
+            @can('general-stores.import')
                 <button onclick="openImportModal()"
                     class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-[1.5px] border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] font-semibold rounded-[10px] transition-all">
                     📂 Import Excel
                 </button>
             @endcan
-            @can('parts.create')
-                <a href="{{ route('parts.create') }}"
+            @can('general-stores.create')
+                <a href="{{ route('general-stores.create') }}"
                     class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[10px] transition-all"
                     style="box-shadow: 0 3px 10px rgba(29,97,175,0.25)">
-                    ＋ Tambah Part
+                    ＋ Tambah Toko
                 </a>
             @endcan
         </div>
     </div>
 
     {{-- Filter Bar --}}
-    <form method="GET" action="{{ route('parts.index') }}" class="flex flex-wrap gap-2.5 mb-4 items-center">
+    <form method="GET" action="{{ route('general-stores.index') }}" class="flex flex-wrap gap-2.5 mb-4 items-center">
         @if (request('sort'))
             <input type="hidden" name="sort" value="{{ request('sort') }}">
             <input type="hidden" name="dir" value="{{ request('dir') }}">
         @endif
-
         <div class="relative flex-1 min-w-[200px] max-w-[280px]">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[13px]">🔍</span>
-            <input type="text" name="search" value="{{ request('search') }}"
-                placeholder="Cari kode, deskripsi, group..."
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama toko..."
                 class="w-full pl-8 pr-3 py-2.5 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-700 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-50 transition-all placeholder-slate-400">
         </div>
-
-        <select name="group_id"
-            class="py-2.5 px-3 bg-white border-[1.5px] border-slate-200 rounded-[9px] text-[13px] text-slate-600 outline-none focus:border-brand-600 transition-all">
-            <option value="">Semua Group</option>
-            @foreach ($groups as $group)
-                <option value="{{ $group->id }}" {{ request('group_id') == $group->id ? 'selected' : '' }}>
-                    {{ $group->name }}
-                </option>
-            @endforeach
-        </select>
-
         <button type="submit"
             class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-[13px] font-semibold rounded-[9px] transition-colors">
             Filter
         </button>
-
-        @if (request()->anyFilled(['search', 'group']))
-            <a href="{{ route('parts.index') }}"
+        @if (request()->anyFilled(['search']))
+            <a href="{{ route('general-stores.index') }}"
                 class="px-4 py-2.5 bg-white border-[1.5px] border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-[13px] font-semibold rounded-[9px] transition-colors">
                 Reset
             </a>
@@ -99,59 +81,32 @@
             <table class="w-full">
                 <thead>
                     <tr>
-                        <x-sort-th column="kode_part" label="Kode Part" :currentSort="$sort" :currentDir="$dir" />
-                        <x-sort-th column="deskripsi_part" label="Deskripsi Part" :currentSort="$sort" :currentDir="$dir" />
-                        <x-sort-th column="group" label="Group" :currentSort="$sort" :currentDir="$dir" />
-                        <x-sort-th column="het" label="HET" :currentSort="$sort" :currentDir="$dir" />
+                        <x-sort-th column="name" label="Nama Toko" :currentSort="$sort" :currentDir="$dir" />
                         <x-sort-th column="created_at" label="Ditambahkan" :currentSort="$sort" :currentDir="$dir" />
-                        @if (auth()->user()->can('parts.edit') || auth()->user()->can('parts.delete'))
+                        @if (auth()->user()->can('general-stores.edit') || auth()->user()->can('general-stores.delete'))
                             <th
                                 class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100">
-                                Aksi</th>
+                                Aksi
+                            </th>
                         @endif
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
-                    @forelse($parts as $part)
+                    @forelse($stores as $store)
                         <tr class="hover:bg-brand-50/40 transition-colors"
-                            data-part-name="{{ addslashes($part->kode_part . ' — ' . $part->deskripsi_part) }}"
-                            data-edit-url="{{ route('parts.edit', $part) }}"
-                            data-delete-url="{{ route('parts.destroy', $part) }}">
+                            data-store-name="{{ addslashes($store->name) }}"
+                            data-edit-url="{{ route('general-stores.edit', $store) }}"
+                            data-delete-url="{{ route('general-stores.destroy', $store) }}"
+                            data-can-edit="{{ auth()->user()->can('general-stores.edit') ? 'true' : 'false' }}"
+                            data-can-delete="{{ auth()->user()->can('general-stores.delete') ? 'true' : 'false' }}">
 
-                            {{-- Kode Part --}}
-                            <td class="px-4 py-3">
-                                <span class="text-[13px] font-semibold text-slate-800 font-mono">
-                                    {{ $part->kode_part }}
-                                </span>
+                            <td class="px-4 py-3 text-[13px] font-semibold text-slate-800">{{ $store->name }}</td>
+                            <td class="px-4 py-3 text-[13px] text-slate-400">{{ $store->created_at->format('d M Y') }}
                             </td>
 
-                            {{-- Deskripsi --}}
-                            <td class="px-4 py-3 text-[13px] text-slate-600">
-                                {{ $part->deskripsi_part }}
-                            </td>
-
-                            {{-- Group --}}
-                            <td class="px-4 py-3">
-                                <span
-                                    class="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-600">
-                                    {{ $part->group?->name ?? '—' }}
-                                </span>
-                            </td>
-
-                            {{-- HET --}}
-                            <td class="px-4 py-3 text-[13px] text-slate-600 font-medium whitespace-nowrap">
-                                {{ $part->het ? 'Rp ' . number_format($part->het, 0, ',', '.') : '—' }}
-                            </td>
-
-                            {{-- Ditambahkan --}}
-                            <td class="px-4 py-3 text-[13px] text-slate-400">
-                                {{ $part->created_at->format('d M Y') }}
-                            </td>
-
-                            {{-- Aksi --}}
-                            @if (auth()->user()->can('parts.edit') || auth()->user()->can('parts.delete'))
+                            @if (auth()->user()->can('general-stores.edit') || auth()->user()->can('general-stores.delete'))
                                 <td class="px-4 py-3 text-center">
-                                    <button onclick="toggleActionMenu(event, 'menu-{{ $part->id }}')"
+                                    <button onclick="toggleActionMenu(event, 'menu-{{ $store->id }}')"
                                         class="w-8 h-8 flex items-center justify-center mx-auto rounded-[7px] text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors text-xl font-bold">
                                         ⋮
                                     </button>
@@ -160,13 +115,10 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-12 text-center">
-                                <div class="text-2xl mb-2">🔧</div>
-                                <div class="text-[14px] font-semibold text-slate-500">Tidak ada data part ditemukan
-                                </div>
-                                <div class="text-[12px] text-slate-400 mt-1">Coba ubah kata kunci pencarian atau tambah
-                                    data part baru
-                                </div>
+                            <td colspan="3" class="px-4 py-12 text-center">
+                                <div class="text-2xl mb-2">🏪</div>
+                                <div class="text-[14px] font-semibold text-slate-500">Tidak ada toko ditemukan</div>
+                                <div class="text-[12px] text-slate-400 mt-1">Tambah manual atau import Excel</div>
                             </td>
                         </tr>
                     @endforelse
@@ -174,33 +126,32 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
-        @if ($parts->hasPages())
+        @if ($stores->hasPages())
             <div class="px-5 py-3.5 border-t border-slate-100 flex items-center justify-between gap-4 flex-wrap">
                 <div class="text-[12px] text-slate-400">
-                    Menampilkan {{ $parts->firstItem() }}–{{ $parts->lastItem() }} dari {{ $parts->total() }} part
+                    Menampilkan {{ $stores->firstItem() }}–{{ $stores->lastItem() }} dari {{ $stores->total() }} toko
                 </div>
                 <div class="flex items-center gap-1.5">
-                    @if ($parts->onFirstPage())
+                    @if ($stores->onFirstPage())
                         <span
                             class="w-8 h-8 flex items-center justify-center rounded-[7px] border-[1.5px] border-slate-200 text-slate-300 text-[13px]">‹</span>
                     @else
-                        <a href="{{ $parts->previousPageUrl() }}"
+                        <a href="{{ $stores->previousPageUrl() }}"
                             class="w-8 h-8 flex items-center justify-center rounded-[7px] border-[1.5px] border-slate-200 text-slate-500 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 text-[13px] transition-colors">‹</a>
                     @endif
 
-                    @foreach ($parts->getUrlRange(1, $parts->lastPage()) as $page => $url)
-                        @if ($page == $parts->currentPage())
+                    @foreach ($stores->getUrlRange(1, $stores->lastPage()) as $page => $url)
+                        @if ($page == $stores->currentPage())
                             <span
                                 class="w-8 h-8 flex items-center justify-center rounded-[7px] bg-brand-600 text-white text-[13px] font-semibold">{{ $page }}</span>
-                        @elseif(abs($page - $parts->currentPage()) <= 2)
+                        @elseif(abs($page - $stores->currentPage()) <= 2)
                             <a href="{{ $url }}"
                                 class="w-8 h-8 flex items-center justify-center rounded-[7px] border-[1.5px] border-slate-200 text-slate-500 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 text-[13px] transition-colors">{{ $page }}</a>
                         @endif
                     @endforeach
 
-                    @if ($parts->hasMorePages())
-                        <a href="{{ $parts->nextPageUrl() }}"
+                    @if ($stores->hasMorePages())
+                        <a href="{{ $stores->nextPageUrl() }}"
                             class="w-8 h-8 flex items-center justify-center rounded-[7px] border-[1.5px] border-slate-200 text-slate-500 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 text-[13px] transition-colors">›</a>
                     @else
                         <span
@@ -217,7 +168,7 @@
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <div>
-                    <div class="text-[14px] font-bold text-slate-800">Import Part</div>
+                    <div class="text-[14px] font-bold text-slate-800">Import Toko Umum</div>
                     <div class="text-[12px] text-slate-400 mt-0.5">Upload file Excel (.xlsx / .xls)</div>
                 </div>
                 <button onclick="closeImportModal()" id="import-close-btn"
@@ -227,7 +178,6 @@
             </div>
 
             <div class="p-5" id="import-upload-section">
-                {{-- Upload form --}}
                 <div class="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center mb-4" id="drop-zone">
                     <div class="text-3xl mb-3">📂</div>
                     <div class="text-[13px] font-semibold text-slate-700 mb-1">Pilih atau drag file Excel</div>
@@ -242,8 +192,7 @@
 
                 <div class="bg-brand-50 border border-brand-100 rounded-xl p-3 mb-4">
                     <div class="text-[11px] text-brand-700">
-                        ℹ️ Format kolom Excel: <span class="font-mono font-semibold">No | Kode Part | Deskripsi Part |
-                            Group | HET</span>
+                        ℹ️ Format kolom Excel: <span class="font-mono font-semibold">Nama Toko Umum</span>
                     </div>
                 </div>
 
@@ -254,7 +203,6 @@
                 </button>
             </div>
 
-            {{-- Progress section --}}
             <div class="p-5 hidden" id="import-progress-section">
                 <div class="flex items-center gap-3 mb-4">
                     <div id="progress-icon" class="text-2xl">⏳</div>
@@ -263,18 +211,14 @@
                         <div id="progress-subtitle" class="text-[12px] text-slate-400 mt-0.5"></div>
                     </div>
                 </div>
-
-                {{-- Progress bar --}}
                 <div class="bg-slate-100 rounded-full h-3 mb-2 overflow-hidden">
                     <div id="progress-bar" class="h-full bg-brand-600 rounded-full transition-all duration-500"
-                        style="width: 0%">
-                    </div>
+                        style="width: 0%"></div>
                 </div>
                 <div class="flex items-center justify-between mb-4">
                     <div id="progress-text" class="text-[12px] text-slate-500">0%</div>
                     <div id="progress-detail" class="text-[12px] text-slate-400"></div>
                 </div>
-
                 <div id="import-result" class="hidden">
                     <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3 mb-4">
                         <div id="result-text" class="text-[13px] font-semibold text-emerald-700"></div>
@@ -303,29 +247,37 @@
                 const btn = event.currentTarget;
                 const rect = btn.getBoundingClientRect();
                 const row = btn.closest('tr');
+                const storeName = row.dataset.storeName;
                 const editUrl = row.dataset.editUrl;
                 const deleteUrl = row.dataset.deleteUrl;
-                const partName = row.dataset.partName;
+                const canEdit = row.dataset.canEdit === 'true';
+                const canDelete = row.dataset.canDelete === 'true';
+
+                let menuItems = '';
+                if (canEdit) {
+                    menuItems += `
+                    <a href="${editUrl}"
+                        class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
+                        ✏️ Edit
+                    </a>
+                `;
+                }
+                if (canDelete) {
+                    if (canEdit) menuItems += `<div class="h-px bg-slate-100"></div>`;
+                    menuItems += `
+                    <button onclick="openDeleteModal('${deleteUrl}', decodeURIComponent('${encodeURIComponent(storeName)}'))"
+                        class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-rose-500 hover:bg-rose-50 transition-colors font-medium">
+                        🗑️ Hapus
+                    </button>
+                `;
+                }
+                if (!menuItems) return;
 
                 const menu = document.createElement('div');
                 menu.id = 'floating-' + menuId;
                 menu.className = 'fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden';
                 menu.style.cssText = `min-width:144px; top:${rect.bottom + 4}px; left:${rect.right - 144}px;`;
-                menu.innerHTML = `
-                @can('parts.edit')
-                    <a href="${editUrl}"
-                    class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
-                    ✏️ Edit
-                    </a>
-                @endcan
-                <div class="h-px bg-slate-100"></div>
-                @can('parts.delete')
-                    <button onclick="openDeleteModal('${deleteUrl}', decodeURIComponent('${encodeURIComponent(partName)}'))"
-                        class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-rose-500 hover:bg-rose-50 transition-colors font-medium">
-                        🗑️ Hapus
-                    </button>
-                @endcan
-            `;
+                menu.innerHTML = menuItems;
                 document.body.appendChild(menu);
                 currentMenu = menuId;
 
@@ -346,7 +298,7 @@
             window.addEventListener('resize', closeAllMenus);
 
             function openDeleteModal(url, name) {
-                document.getElementById('modal-part-name').textContent = name;
+                document.getElementById('modal-store-name').textContent = name;
                 document.getElementById('delete-form').action = url;
                 closeAllMenus();
                 const modal = document.getElementById('delete-modal');
@@ -364,7 +316,7 @@
                 if (e.target === this) closeDeleteModal();
             });
 
-            // ── Import Excel ──────────────────────────────────────────────────────
+            // ── Import ────────────────────────────────────────────────────────
             let importCacheKey = null;
             let progressInterval = null;
             let selectedFile = null;
@@ -383,8 +335,6 @@
                 document.getElementById('import-modal').classList.add('hidden');
                 document.getElementById('import-modal').classList.remove('flex');
                 document.body.style.overflow = '';
-
-                // Reset state
                 resetImportModal();
             }
 
@@ -404,7 +354,6 @@
                 document.getElementById('import-close-btn').disabled = false;
             }
 
-            // File input change
             document.getElementById('import-file').addEventListener('change', function() {
                 selectedFile = this.files[0];
                 if (selectedFile) {
@@ -414,7 +363,6 @@
                 }
             });
 
-            // Drag & drop
             const dropZone = document.getElementById('drop-zone');
             dropZone.addEventListener('dragover', e => {
                 e.preventDefault();
@@ -437,8 +385,6 @@
 
             async function startImport() {
                 if (!selectedFile) return;
-
-                // Switch ke progress section
                 document.getElementById('import-upload-section').classList.add('hidden');
                 document.getElementById('import-progress-section').classList.remove('hidden');
                 document.getElementById('import-close-btn').disabled = true;
@@ -448,25 +394,19 @@
                 formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
 
                 try {
-                    const response = await fetch('{{ route('parts.import') }}', {
+                    const response = await fetch('{{ route('general-stores.import') }}', {
                         method: 'POST',
                         body: formData,
                     });
-
                     const data = await response.json();
-
                     if (!data.success) {
                         showImportError(data.message);
                         return;
                     }
-
                     importCacheKey = data.cache_key;
-                    document.getElementById('progress-subtitle').textContent =
-                        'Total ' + data.total_rows.toLocaleString() + ' baris data';
-
-                    // Mulai polling progress
+                    document.getElementById('progress-subtitle').textContent = 'Total ' + data.total_rows.toLocaleString() +
+                        ' baris data';
                     progressInterval = setInterval(checkProgress, 1500);
-
                 } catch (err) {
                     showImportError('Gagal menghubungi server. Coba lagi.');
                 }
@@ -474,30 +414,21 @@
 
             async function checkProgress() {
                 if (!importCacheKey) return;
-
                 try {
-                    const response = await fetch(
-                        '{{ route('parts.import.progress') }}?cache_key=' + importCacheKey
-                    );
+                    const response = await fetch('{{ route('general-stores.import.progress') }}?cache_key=' +
+                        importCacheKey);
                     const data = await response.json();
-
                     if (!data.success) return;
-
-                    // Update progress bar
                     document.getElementById('progress-bar').style.width = data.percentage + '%';
                     document.getElementById('progress-text').textContent = data.percentage + '%';
-                    document.getElementById('progress-detail').textContent =
-                        data.done + ' / ' + data.total + ' batch selesai';
-
+                    document.getElementById('progress-detail').textContent = data.done + ' / ' + data.total +
+                        ' batch selesai';
                     if (data.is_done) {
                         clearInterval(progressInterval);
                         progressInterval = null;
                         showImportDone(data.rows);
                     }
-
-                } catch (err) {
-                    // Silent fail — polling tetap jalan
-                }
+                } catch (err) {}
             }
 
             function showImportDone(totalRows) {
@@ -506,8 +437,7 @@
                 document.getElementById('progress-bar').style.width = '100%';
                 document.getElementById('progress-bar').classList.remove('bg-brand-600');
                 document.getElementById('progress-bar').classList.add('bg-emerald-500');
-                document.getElementById('result-text').textContent =
-                    totalRows.toLocaleString() + ' baris berhasil diproses.';
+                document.getElementById('result-text').textContent = totalRows.toLocaleString() + ' toko berhasil diproses.';
                 document.getElementById('import-result').classList.remove('hidden');
                 document.getElementById('import-close-btn').disabled = false;
             }
@@ -521,9 +451,7 @@
             }
 
             document.getElementById('import-modal').addEventListener('click', function(e) {
-                if (e.target === this && !document.getElementById('import-close-btn').disabled) {
-                    closeImportModal();
-                }
+                if (e.target === this && !document.getElementById('import-close-btn').disabled) closeImportModal();
             });
         </script>
     @endpush

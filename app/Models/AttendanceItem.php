@@ -8,7 +8,7 @@ class AttendanceItem extends Model
 {
     protected $fillable = [
         'attendance_id',
-        'part_number',
+        'kode_part',
         'quantity',
         'notes',
     ];
@@ -16,5 +16,10 @@ class AttendanceItem extends Model
     public function attendance()
     {
         return $this->belongsTo(Attendance::class);
+    }
+
+    public function part()
+    {
+        return $this->belongsTo(Part::class, 'kode_part', 'kode_part')->withTrashed();
     }
 }

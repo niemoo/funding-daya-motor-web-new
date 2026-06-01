@@ -127,8 +127,8 @@
                     @forelse($attendance->items as $i => $item)
                         <div class="item-row flex items-center gap-2">
                             <div class="flex-1">
-                                <input type="text" name="items[{{ $i }}][part_number]"
-                                    value="{{ $item->part_number }}" placeholder="Nomor Part"
+                                <input type="text" name="items[{{ $i }}][kode_part]"
+                                    value="{{ $item->kode_part }}" placeholder="Nomor Part"
                                     class="w-full px-3 py-2 bg-slate-50 border-[1.5px] border-slate-200 rounded-[9px] text-[12px] font-mono text-slate-800 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-50 transition-all placeholder-slate-400">
                             </div>
                             <div class="w-24">
@@ -150,7 +150,7 @@
                         {{-- Satu row kosong kalau belum ada items --}}
                         <div class="item-row flex items-center gap-2">
                             <div class="flex-1">
-                                <input type="text" name="items[0][part_number]" placeholder="Nomor Part"
+                                <input type="text" name="items[0][kode_part]" placeholder="Nomor Part"
                                     class="w-full px-3 py-2 bg-slate-50 border-[1.5px] border-slate-200 rounded-[9px] text-[12px] font-mono text-slate-800 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-50 transition-all placeholder-slate-400">
                             </div>
                             <div class="w-24">
@@ -266,10 +266,10 @@
                 <div class="text-[14px] font-bold text-slate-800">Import Gagal</div>
                 <div class="text-[13px] text-slate-500 text-center">${message ?? 'Terjadi kesalahan.'}</div>
                 ${warnings.length > 0 ? `
-                                            <div class="w-full mt-2 bg-amber-50 border border-amber-100 rounded-xl p-3 space-y-1">
-                                                ${warnings.map(w => `<div class="text-[12px] text-amber-700">⚠️ ${w}</div>`).join('')}
-                                            </div>
-                                        ` : ''}
+                                                    <div class="w-full mt-2 bg-amber-50 border border-amber-100 rounded-xl p-3 space-y-1">
+                                                        ${warnings.map(w => `<div class="text-[12px] text-amber-700">⚠️ ${w}</div>`).join('')}
+                                                    </div>
+                                                ` : ''}
                 <button onclick="closeImportModal()"
                     class="mt-2 px-5 py-2.5 bg-white border-[1.5px] border-slate-200 text-slate-500 hover:bg-slate-50 text-[13px] font-semibold rounded-[9px] transition-colors">
                     Tutup
@@ -288,19 +288,19 @@
                         Total qty: ${totalQty}
                     </span>
                     ${warnings.length > 0 ? `
-                                                <span class="text-[12px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600">
-                                                    ⚠️ ${warnings.length} baris dilewati
-                                                </span>
-                                            ` : ''}
+                                                        <span class="text-[12px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600">
+                                                            ⚠️ ${warnings.length} baris dilewati
+                                                        </span>
+                                                    ` : ''}
                 </div>
 
                 {{-- Warnings --}}
                 ${warnings.length > 0 ? `
-                                            <div class="bg-amber-50 border border-amber-100 rounded-xl p-3 space-y-1">
-                                                <div class="text-[11px] font-bold uppercase tracking-wide text-amber-600 mb-1.5">Baris yang dilewati:</div>
-                                                ${warnings.map(w => `<div class="text-[12px] text-amber-700">• ${w}</div>`).join('')}
-                                            </div>
-                                        ` : ''}
+                                                    <div class="bg-amber-50 border border-amber-100 rounded-xl p-3 space-y-1">
+                                                        <div class="text-[11px] font-bold uppercase tracking-wide text-amber-600 mb-1.5">Baris yang dilewati:</div>
+                                                        ${warnings.map(w => `<div class="text-[12px] text-amber-700">• ${w}</div>`).join('')}
+                                                    </div>
+                                                ` : ''}
 
                 {{-- Preview table --}}
                 <div class="border border-slate-200 rounded-xl overflow-hidden">
@@ -315,13 +315,13 @@
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             ${items.map((item, i) => `
-                                                        <tr>
-                                                            <td class="px-4 py-2.5 text-[12px] text-slate-400">${i + 1}</td>
-                                                            <td class="px-4 py-2.5 text-[13px] font-semibold text-slate-800 font-mono">${item.part_number}</td>
-                                                            <td class="px-4 py-2.5 text-center text-[13px] font-bold text-brand-600">${item.quantity}</td>
-                                                            <td class="px-4 py-2.5 text-[12px] text-slate-500">${item.notes ?? '—'}</td>
-                                                        </tr>
-                                                    `).join('')}
+                                                                <tr>
+                                                                    <td class="px-4 py-2.5 text-[12px] text-slate-400">${i + 1}</td>
+                                                                    <td class="px-4 py-2.5 text-[13px] font-semibold text-slate-800 font-mono">${item.kode_part}</td>
+                                                                    <td class="px-4 py-2.5 text-center text-[13px] font-bold text-brand-600">${item.quantity}</td>
+                                                                    <td class="px-4 py-2.5 text-[12px] text-slate-500">${item.notes ?? '—'}</td>
+                                                                </tr>
+                                                            `).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -399,7 +399,7 @@
                 row.className = 'item-row flex items-center gap-2';
                 row.innerHTML = `
                     <div class="flex-1">
-                        <input type="text" name="items[${itemIndex}][part_number]" placeholder="Nomor Part"
+                        <input type="text" name="items[${itemIndex}][kode_part]" placeholder="Nomor Part"
                             class="w-full px-3 py-2 bg-slate-50 border-[1.5px] border-slate-200 rounded-[9px] text-[12px] font-mono text-slate-800 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-50 transition-all placeholder-slate-400">
                     </div>
                     <div class="w-24">
