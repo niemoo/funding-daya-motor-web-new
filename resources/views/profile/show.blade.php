@@ -230,7 +230,7 @@
 
                                 <td class="px-4 py-3">
                                     <div class="text-[13px] font-semibold text-slate-800">
-                                        {{ $att->store_name }}
+                                        {{ $att->generalStore?->name ?? ($att->store_name ?? '—') }}
                                     </div>
 
                                     <div class="text-[11px] text-slate-400">

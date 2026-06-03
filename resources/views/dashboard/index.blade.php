@@ -231,7 +231,7 @@
                                 </td>
                             @endif
                             <td class="px-4 py-3 text-[13px] text-slate-600 max-w-[140px] truncate">
-                                {{ $att->store_name }}</td>
+                                {{ $att->generalStore?->name ?? ($att->store_name ?? '—') }}</td>
                             <td class="px-4 py-3 text-[13px] font-semibold text-slate-800">
                                 {{ $att->checkin_time->format('H:i') }}
                             </td>
@@ -270,6 +270,93 @@
         </div>
     </div>
 
+
+    {{-- ── Top 10 Parts Terlaris ── --}}
+    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden my-6">
+        <div class="px-5 py-4 border-b border-slate-100">
+            <div class="text-[14px] font-bold text-slate-800">Top 10 Part Terlaris</div>
+            <div class="text-[12px] text-slate-400 mt-0.5">Bulan {{ now()->locale('id')->isoFormat('MMMM Y') }}
+            </div>
+        </div>
+        <div class="divide-y divide-slate-50">
+            @forelse($topParts as $i => $part)
+                <div class="flex items-center gap-3 px-5 py-3">
+                    <div
+                        class="w-6 h-6 rounded-lg bg-brand-50 flex items-center justify-center text-[11px] font-bold text-brand-600 flex-shrink-0">
+                        {{ $i + 1 }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[13px] font-semibold text-slate-800 font-mono truncate">
+                            {{ $part['kode_part'] }}</div>
+                        <div class="text-[11px] text-slate-400 truncate">{{ $part['deskripsi_part'] }}</div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <div class="text-[13px] font-bold text-brand-600">{{ number_format($part['total_qty']) }} pcs
+                        </div>
+                        @if ($part['total_nilai'] > 0)
+                            <div class="text-[11px] text-slate-400">Rp
+                                {{ number_format($part['het'], 0, ',', '.') }} / pcs</div>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="px-5 py-8 text-center text-[13px] text-slate-400">Belum ada data bulan ini</div>
+            @endforelse
+            {{-- @forelse($topParts as $i => $part)
+                <div class="flex items-center gap-3 px-5 py-3">
+                    <div
+                        class="w-6 h-6 rounded-lg bg-brand-50 flex items-center justify-center text-[11px] font-bold text-brand-600 flex-shrink-0">
+                        {{ $i + 1 }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[13px] font-semibold text-slate-800 font-mono truncate">
+                            {{ $part['kode_part'] }}</div>
+                        <div class="text-[11px] text-slate-400 truncate">{{ $part['deskripsi_part'] }}</div>
+                    </div>
+                    <span
+                        class="text-[13px] font-bold text-brand-600 flex-shrink-0">{{ number_format($part['total_qty']) }}
+                        pcs</span>
+                </div>
+            @empty
+                <div class="px-5 py-8 text-center text-[13px] text-slate-400">Belum ada data bulan ini</div>
+            @endforelse --}}
+        </div>
+    </div>
+
+    {{-- ── Top 5 Toko ── --}}
+    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden my-6">
+        <div class="px-5 py-4 border-b border-slate-100">
+            <div class="text-[14px] font-bold text-slate-800">Top 5 Toko</div>
+            <div class="text-[12px] text-slate-400 mt-0.5">Bulan {{ now()->locale('id')->isoFormat('MMMM Y') }}
+            </div>
+        </div>
+        <div class="divide-y divide-slate-50">
+            @forelse($topStores as $i => $store)
+                <div class="flex items-center gap-3 px-5 py-3">
+                    <div
+                        class="w-6 h-6 rounded-lg bg-emerald-50 flex items-center justify-center text-[11px] font-bold text-emerald-600 flex-shrink-0">
+                        {{ $i + 1 }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[13px] font-semibold text-slate-800 truncate">
+                            {{ $store->generalStore?->name ?? '—' }}
+                        </div>
+                        <div class="text-[11px] text-slate-400">
+                            {{ $store->total_visits }} kunjungan · {{ number_format($store->total_qty ?? 0) }} pcs
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <div class="text-[13px] font-bold text-emerald-600">
+                            Rp {{ number_format($store->total_nilai ?? 0, 0, ',', '.') }}
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="px-5 py-8 text-center text-[13px] text-slate-400">Belum ada data bulan ini</div>
+            @endforelse
+        </div>
+    </div>
+
     {{-- ── Map Kunjungan ── --}}
     <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden my-6">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
@@ -285,6 +372,7 @@
         </div>
         <div id="attendance-map" style="height: 420px; width: 100%;"></div>
     </div>
+
 
     @push('scripts')
         <script>

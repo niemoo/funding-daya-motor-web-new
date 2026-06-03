@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\GeneralStore;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -19,7 +20,8 @@ class AttendanceController extends Controller
             'checkin_longitude' => 'required|numeric',
             'checkin_time'      => 'required|date_format:Y-m-d H:i:s',
             'checkin_photo'     => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'store_name'        => 'required|string|max:255',
+            'general_store_id'  => 'nullable|numeric',
+            'store_name'        => 'required_without:general_store_id|string|max:255',
             'pic_name'          => 'required|string|max:255',
             'pic_phone'         => 'required|string|max:20',
         ], [
@@ -33,64 +35,174 @@ class AttendanceController extends Controller
             'checkin_photo.image'        => 'File harus berupa gambar.',
             'checkin_photo.mimes'        => 'Format foto harus jpg, jpeg, png, atau webp.',
             'checkin_photo.max'          => 'Ukuran foto maksimal 5MB.',
-            'store_name.required'        => 'Nama toko wajib diisi.',
+            'store_name.required_without' => 'Nama toko wajib diisi jika tidak memilih toko yang sudah ada.',
             'pic_name.required'          => 'Nama PIC wajib diisi.',
             'pic_phone.required'         => 'Nomor telepon PIC wajib diisi.',
         ]);
 
         $user = $request->user();
 
-        // Cek apakah masih ada kunjungan yang belum checkout
+        // Cek ongoing visit
         $ongoingVisit = Attendance::where('user_id', $user->id)
             ->whereNull('checkout_time')
             ->latest('checkin_time')
             ->first();
 
         if ($ongoingVisit) {
+            $ongoingStoreName = $ongoingVisit->generalStore?->name ?? $ongoingVisit->store_name;
             return response()->json([
                 'success' => false,
-                'message' => 'Anda masih check-in di ' . $ongoingVisit->store_name . '. Silakan checkout terlebih dahulu.',
+                'message' => 'Anda masih check-in di ' . $ongoingStoreName . '. Silakan checkout terlebih dahulu.',
                 'data'    => [
                     'ongoing_attendance_id' => $ongoingVisit->id,
-                    'store_name'            => $ongoingVisit->store_name,
+                    'store_name'            => $ongoingStoreName,
                     'checkin_time'          => $ongoingVisit->checkin_time->format('H:i'),
                 ],
             ], 422);
         }
 
+        // Resolve store
+        if ($request->filled('general_store_id')) {
+            // Pakai toko yang sudah ada
+            $store = GeneralStore::find($request->general_store_id);
+            if (!$store) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Toko tidak ditemukan.',
+                ], 404);
+            }
+        } else {
+            // Auto-create toko baru
+            $store = GeneralStore::firstOrCreate(
+                ['name' => trim($request->store_name)],
+            );
+        }
+
         // Simpan foto
         $checkinTime = Carbon::parse($request->checkin_time);
         $photoPath   = $request->file('checkin_photo')->store(
-            'photos/checkin/' . $checkinTime->format('Y/m'),
-            'public'
+            'photos/checkin/' . $checkinTime->format('Y/m'), 'public'
         );
 
-        // Buat attendance
         $attendance = Attendance::create([
             'user_id'                => $user->id,
+            'general_store_id'       => $store->id,
+            'store_name'             => $store->name,
             'attendance_date'        => $checkinTime->toDateString(),
             'checkin_time'           => $checkinTime,
             'checkin_latitude'       => $request->checkin_latitude,
             'checkin_longitude'      => $request->checkin_longitude,
             'checkin_photo'          => $photoPath,
-            'store_name'             => $request->store_name,
             'person_in_charge_name'  => $request->pic_name,
             'person_in_charge_phone' => $request->pic_phone,
         ]);
 
-        // $attendanceStatus = $this->getAttendanceStatus($user);
-
         return response()->json([
             'success' => true,
-            'message' => 'Check-in berhasil di ' . $attendance->store_name . '.',
+            'message' => 'Check-in berhasil di ' . $store->name . '.',
             'data'    => [
                 'attendance_id'     => $attendance->id,
-                'store_name'        => $attendance->store_name,
+                'store_name'        => $store->name,
+                'general_store_id'  => $store->id,
+                'is_new_store'      => $store->wasRecentlyCreated, // info ke Flutter apakah toko baru
                 'checkin_time'      => $attendance->checkin_time->format('H:i'),
                 'checkin_photo_url' => Storage::url($photoPath),
             ],
         ], 201);
     }
+    
+// public function checkin(Request $request)
+    // {
+    //     $request->validate([
+    //         'checkin_latitude'  => 'required|numeric',
+    //         'checkin_longitude' => 'required|numeric',
+    //         'checkin_time'      => 'required|date_format:Y-m-d H:i:s',
+    //         'checkin_photo'     => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+    //         // 'general_store_id'   => 'required|exists:general_stores,id',
+    //         'general_store_id'   => 'required|numeric',
+    //         'pic_name'          => 'required|string|max:255',
+    //         'pic_phone'         => 'required|string|max:20',
+    //     ], [
+    //         'checkin_latitude.required'  => 'Latitude wajib diisi.',
+    //         'checkin_latitude.numeric'   => 'Latitude harus berupa angka.',
+    //         'checkin_longitude.required' => 'Longitude wajib diisi.',
+    //         'checkin_longitude.numeric'  => 'Longitude harus berupa angka.',
+    //         'checkin_time.required'      => 'Waktu check-in wajib diisi.',
+    //         'checkin_time.date_format'   => 'Format waktu harus Y-m-d H:i:s.',
+    //         'checkin_photo.required'     => 'Foto check-in wajib diupload.',
+    //         'checkin_photo.image'        => 'File harus berupa gambar.',
+    //         'checkin_photo.mimes'        => 'Format foto harus jpg, jpeg, png, atau webp.',
+    //         'checkin_photo.max'          => 'Ukuran foto maksimal 5MB.',
+    //         'general_store_id.required' => 'Toko wajib dipilih.',
+    //         // 'general_store_id.exists'   => 'Toko tidak ditemukan.',
+    //         'general_store_id.numeric'  => 'ID toko harus berupa angka.',
+    //         'pic_name.required'          => 'Nama PIC wajib diisi.',
+    //         'pic_phone.required'         => 'Nomor telepon PIC wajib diisi.',
+    //     ]);
+
+    //     $user = $request->user();
+
+    //     // Cek apakah masih ada kunjungan yang belum checkout
+    //     $ongoingVisit = Attendance::where('user_id', $user->id)
+    //         ->whereNull('checkout_time')
+    //         ->latest('checkin_time')
+    //         ->first();
+
+    //     if ($ongoingVisit) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Anda masih check-in di ' . $ongoingVisit->store_name . '. Silakan checkout terlebih dahulu.',
+    //             'data'    => [
+    //                 'ongoing_attendance_id' => $ongoingVisit->id,
+    //                 'store_name'            => $ongoingVisit->store_name,
+    //                 'checkin_time'          => $ongoingVisit->checkin_time->format('H:i'),
+    //             ],
+    //         ], 422);
+    //     }
+
+    //     $store = GeneralStore::find($request->general_store_id);
+
+    //     if (!$store) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Toko tidak ditemukan.',
+    //         ], 404);
+    //     }
+
+    //     // Simpan foto
+    //     $checkinTime = Carbon::parse($request->checkin_time);
+    //     $photoPath   = $request->file('checkin_photo')->store(
+    //         'photos/checkin/' . $checkinTime->format('Y/m'),
+    //         'public'
+    //     );
+
+    //     // Create attendance
+    //     $attendance = Attendance::create([
+    //         'user_id'                => $user->id,
+    //         'general_store_id'       => $request->general_store_id,
+    //         'attendance_date'        => $checkinTime->toDateString(),
+    //         'checkin_time'           => $checkinTime,
+    //         'checkin_latitude'       => $request->checkin_latitude,
+    //         'checkin_longitude'      => $request->checkin_longitude,
+    //         'checkin_photo'          => $photoPath,
+    //         'store_name'             => $store->name,
+    //         'person_in_charge_name'  => $request->pic_name,
+    //         'person_in_charge_phone' => $request->pic_phone,
+    //     ]);
+
+    //     // $attendanceStatus = $this->getAttendanceStatus($user);
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Check-in berhasil di ' . $attendance->generalStore->name . '.',
+    //         'data'    => [
+    //             'attendance_id'     => $attendance->id,
+    //             'store_name'        => $attendance->generalStore->name,
+    //             'checkin_time'      => $attendance->checkin_time->format('H:i'),
+    //             'checkin_photo_url' => Storage::url($photoPath),
+    //         ],
+    //     ], 201);
+    // }
 
     // ── Check-out ──
     public function checkout(Request $request)

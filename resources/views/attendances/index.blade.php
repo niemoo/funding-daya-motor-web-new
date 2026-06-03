@@ -184,7 +184,7 @@
                             {{-- Toko & PIC --}}
                             <td class="px-4 py-3" style="min-width:180px">
                                 <div class="text-[13px] font-semibold text-slate-800 leading-snug">
-                                    {{ $att->store_name }}</div>
+                                    {{ $att->generalStore?->name ?? ($att->store_name ?? '—') }}</div>
                                 <div class="text-[11px] text-slate-400 mt-0.5">{{ $att->person_in_charge_name }}</div>
                                 <div class="text-[11px] text-slate-400">{{ $att->person_in_charge_phone }}</div>
                             </td>
@@ -334,7 +334,8 @@
                                     <div class="px-6 py-4 bg-brand-50/40 border-t border-brand-100">
                                         <div class="flex items-center gap-2 mb-3">
                                             <span class="text-[12px] font-bold text-brand-600 uppercase tracking-wide">
-                                                📦 Daftar Part — {{ $att->store_name }}
+                                                📦 Daftar Part —
+                                                {{ $att->generalStore?->name ?? ($att->store_name ?? '—') }}
                                             </span>
                                             <span
                                                 class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-brand-100 text-brand-600">

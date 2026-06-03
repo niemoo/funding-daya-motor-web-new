@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AttendanceItemController;
+use App\Http\Controllers\Api\GeneralStoreApiController;
 use App\Http\Controllers\Api\PartController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -30,6 +31,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/attendances/{attendance}/items/import', [AttendanceItemController::class, 'import']);
     Route::get('/items/template', [AttendanceItemController::class, 'downloadTemplate']);
 
+    // General Store
+    Route::get('/general-stores', [GeneralStoreApiController::class, 'search']);
+
     // Part
-    Route::get('/parts/search', [PartController::class, 'search']);
+    Route::get('/parts', [PartController::class, 'search']);
 });

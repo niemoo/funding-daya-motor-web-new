@@ -7,6 +7,7 @@ use App\Http\Controllers\PartController;
 use App\Http\Controllers\PartGroupController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StockLocatorController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -140,6 +141,11 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('general-stores', GeneralStoreController::class)->except(['show']);
     });
 
+    Route::get('/stock-locators/import/progress', [StockLocatorController::class, 'importProgress'])->name('stock-locators.import.progress');
+    Route::post('/stock-locators/import', [StockLocatorController::class, 'importExcel'])->name('stock-locators.import')->middleware('permission:stock-locators.import');
+    Route::middleware('permission:stock-locators.view')->group(function () {
+        Route::resource('stock-locators', StockLocatorController::class)->except(['show']);
+    });
  
     // Profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show')->middleware('permission:profile.view');

@@ -11,29 +11,30 @@ class PartController extends Controller
     public function search(Request $request)
     {
         $request->validate([
-            'keyword' => 'required|string|min:2|max:100',
+            'search' => 'required|string|min:2|max:100',
         ], [
-            'keyword.required' => 'Keyword pencarian wajib diisi.',
-            'keyword.min'      => 'Keyword minimal 2 karakter.',
+            'search.required' => 'Keyword pencarian wajib diisi.',
+            'search.min'      => 'Keyword minimal 2 karakter.',
         ]);
 
-        $keyword = $request->keyword;
+        $search = $request->search;
 
-        $parts = Part::where('kode_part', 'like', '%' . $keyword . '%')
-            ->orWhere('deskripsi_part', 'like', '%' . $keyword . '%')
+        $parts = Part::where('kode_part', 'like', '%' . $search . '%')
+            ->orWhere('deskripsi_part', 'like', '%' . $search . '%')
             ->orderByRaw("
                 CASE
                     WHEN kode_part LIKE ? THEN 1
                     WHEN deskripsi_part LIKE ? THEN 2
                     ELSE 3
                 END
-            ", [$keyword . '%', $keyword . '%'])
+            ", [$search . '%', $search . '%'])
             ->limit(10)
             ->get(['kode_part', 'deskripsi_part']);
 
         return response()->json([
             'success' => true,
             'message' => 'Pencarian part berhasil.',
+            'total_data'   => $parts->count(),
             'data'    => $parts,
         ]);
     }

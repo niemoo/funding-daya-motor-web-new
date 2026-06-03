@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
+use App\Models\AttendanceItem;
+use App\Models\Part;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -73,6 +75,41 @@ class DashboardController extends Controller
             ->latest('updated_at')
             ->take(5)
             ->get();
+
+        // ── Top 10 Parts Terlaris ──
+        $topParts = AttendanceItem::query()
+            ->selectRaw('kode_part, SUM(quantity) as total_qty')
+            ->whereHas('attendance', fn($q) => $q->whereMonth('attendance_date', now()->month)
+                ->whereYear('attendance_date', now()->year))
+            ->groupBy('kode_part')
+            ->orderByDesc('total_qty')
+            ->limit(10)
+            ->get()
+            ->map(function ($item) {
+                $part = Part::withTrashed()->where('kode_part', $item->kode_part)->first();
+                return [
+                    'kode_part'      => $item->kode_part,
+                    'deskripsi_part' => $part?->deskripsi_part ?? '—',
+                    'total_qty'      => $item->total_qty,
+                    'het'            => $part?->het ?? 0,
+                    'total_nilai'    => $item->total_qty * ($part?->het ?? 0),
+                ];
+            });
+
+        // ── Top 5 Toko Terlaris ──
+        $topStores = Attendance::query()
+            ->selectRaw('general_store_id, COUNT(*) as total_visits,
+                SUM((SELECT SUM(quantity) FROM attendance_items WHERE attendance_id = attendances.id)) as total_qty,
+                SUM((SELECT SUM(ai.quantity * p.het) FROM attendance_items ai LEFT JOIN parts p ON p.kode_part = ai.kode_part WHERE ai.attendance_id = attendances.id)) as total_nilai')
+            ->whereNotNull('general_store_id')
+            ->whereMonth('attendance_date', now()->month)
+            ->whereYear('attendance_date', now()->year)
+            ->when(!$isAdmin, fn($q) => $q->where('user_id', $user->id))
+            ->groupBy('general_store_id')
+            ->orderByDesc('total_nilai')
+            ->limit(5)
+            ->with('generalStore')
+            ->get();
         
         // -─ Maps ──
         $mapAttendances = Attendance::with('user')
@@ -109,7 +146,9 @@ class DashboardController extends Controller
             'recentAttendances',
             'topSales', 'maxVisits',
             'recentActivity',
-            'mapAttendances'
+            'mapAttendances',
+            'topParts',
+            'topStores',
         ));
     }
 }

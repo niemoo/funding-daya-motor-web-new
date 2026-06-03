@@ -16,6 +16,7 @@ class Attendance extends Model
         'checkin_latitude',
         'checkin_longitude',
         'checkin_photo',
+        'general_store_id',
         'store_name',
         'person_in_charge_name',
         'person_in_charge_phone',
@@ -43,6 +44,11 @@ class Attendance extends Model
     public function items()
     {
         return $this->hasMany(AttendanceItem::class);
+    }
+
+    public function generalStore()
+    {
+        return $this->belongsTo(GeneralStore::class)->withTrashed();
     }
 
     public function activityLogs()

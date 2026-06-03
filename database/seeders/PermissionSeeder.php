@@ -57,6 +57,19 @@ class PermissionSeeder extends Seeder
             'general-stores.delete',
             'general-stores.import',
 
+            // Stock Locators
+            'stock-locators.view',
+            'stock-locators.create',
+            'stock-locators.edit',
+            'stock-locators.delete',
+            'stock-locators.import',
+
+            // Branches
+            'branches.view',
+            'branches.create',
+            'branches.edit',
+            'branches.delete',
+
             // Profile
             'profile.view',
         ];

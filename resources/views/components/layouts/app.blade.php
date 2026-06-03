@@ -173,6 +173,15 @@
                         Toko Umum
                     </a>
                 @endcan
+
+                @can('stock-locators.view')
+                    <a href="{{ route('stock-locators.index') }}"
+                        class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
+    {{ request()->routeIs('stock-locators.*') ? 'nav-active' : '' }}">
+                        <span class="nav-icon text-[15px] w-5 text-center">📍</span>
+                        Stock Locator
+                    </a>
+                @endcan
             </nav>
 
             {{-- User card --}}
