@@ -182,6 +182,15 @@
                         Stock Locator
                     </a>
                 @endcan
+
+                @can('branches.view')
+                    <a href="{{ route('branches.index') }}"
+                        class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[9px] text-[13.5px] font-medium text-slate-500 hover:bg-brand-50 hover:text-brand-600 transition-all duration-150
+    {{ request()->routeIs('branches.*') ? 'nav-active' : '' }}">
+                        <span class="nav-icon text-[15px] w-5 text-center">🏢</span>
+                        Cabang
+                    </a>
+                @endcan
             </nav>
 
             {{-- User card --}}

@@ -209,4 +209,25 @@ class PartController extends Controller
             'is_done'    => $isDone,
         ]);
     }
+
+    public function autocomplete(Request $request)
+    {
+        $keyword = $request->q;
+        if (!$keyword || strlen($keyword) < 3) return response()->json([]);
+
+        $parts = Part::with('group')
+            ->where(function($q) use ($keyword) {
+                $q->where('kode_part', 'like', '%' . $keyword . '%')
+                ->orWhere('deskripsi_part', 'like', '%' . $keyword . '%');
+            })
+            ->limit(10)
+            ->get(['kode_part', 'deskripsi_part', 'part_group_id']);
+
+        return response()->json($parts->map(fn($p) => [
+            'kode_part'      => $p->kode_part,
+            'deskripsi_part' => $p->deskripsi_part,
+            'part_group_id'  => $p->part_group_id,
+            'group_name'     => $p->group?->name,
+        ]));
+    }
 }

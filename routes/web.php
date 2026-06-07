@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GeneralStoreController;
 use App\Http\Controllers\PartController;
@@ -108,6 +109,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('parts.destroy')
         ->middleware('permission:parts.delete');
 
+    Route::get('/parts/autocomplete', [PartController::class, 'autocomplete'])->name('parts.autocomplete');
+
 
 
     // Part Groups
@@ -145,6 +148,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/stock-locators/import', [StockLocatorController::class, 'importExcel'])->name('stock-locators.import')->middleware('permission:stock-locators.import');
     Route::middleware('permission:stock-locators.view')->group(function () {
         Route::resource('stock-locators', StockLocatorController::class)->except(['show']);
+    });
+
+    Route::middleware('permission:branches.view')->group(function () {
+        Route::resource('branches', BranchController::class)->except(['show']);
     });
  
     // Profile

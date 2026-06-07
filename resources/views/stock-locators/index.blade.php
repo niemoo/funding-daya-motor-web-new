@@ -164,11 +164,14 @@
                             <td class="px-4 py-3 text-[13px] text-slate-600 font-mono">
                                 {{ $locator->lokasi_stock ?? '—' }}</td>
                             <td class="px-4 py-3 text-[13px] text-slate-800 font-semibold">
-                                {{ number_format($locator->jumlah, 2, ',', '.') }}</td>
+                                {{ number_format($locator->jumlah, 0, ',', '.') }}
+                            </td>
                             <td class="px-4 py-3 text-[13px] text-slate-600 text-right">
-                                {{ number_format($locator->nilai_stock, 2, ',', '.') }}</td>
+                                {{ number_format($locator->nilai_stock, 0, ',', '.') }}
+                            </td>
                             <td class="px-4 py-3 text-[13px] font-semibold text-slate-800 text-right">
-                                {{ number_format($locator->total_nilai, 2, ',', '.') }}</td>
+                                {{ number_format($locator->total_nilai, 0, ',', '.') }}
+                            </td>
 
                             @if (auth()->user()->can('stock-locators.edit') || auth()->user()->can('stock-locators.delete'))
                                 <td class="px-4 py-3 text-center">

@@ -31,35 +31,31 @@
                     @enderror
                 </div>
 
-                {{-- Kode Part --}}
-                <div>
+                {{-- Kode Part + Autocomplete --}}
+                <div class="relative">
                     <label class="block text-[12px] font-semibold text-slate-600 mb-1.5">Kode Part</label>
-                    <input type="text" name="kode_part" value="{{ old('kode_part') }}"
-                        placeholder="Contoh: 50500KEV880"
+                    <input type="text" id="kode-part-input" name="kode_part" value="{{ old('kode_part') }}"
+                        placeholder="Ketik minimal 3 huruf..." autocomplete="off"
                         class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[13px] font-mono text-slate-800 outline-none transition-all placeholder-slate-400
                         {{ $errors->has('kode_part') ? 'border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
+                    <div id="part-suggestions"
+                        class="hidden absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+                    </div>
                     @error('kode_part')
                         <p class="mt-1.5 text-[12px] text-rose-500">{{ $message }}</p>
                     @enderror
                 </div>
 
-                {{-- Group --}}
+                {{-- Hidden part_group_id --}}
+                <input type="hidden" id="part-group-id" name="part_group_id" value="{{ old('part_group_id') }}">
+
+                {{-- Group — read only, auto dari part --}}
                 <div>
                     <label class="block text-[12px] font-semibold text-slate-600 mb-1.5">Group</label>
-                    <select name="part_group_id"
-                        class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[13px] text-slate-800 outline-none transition-all
-                        {{ $errors->has('part_group_id') ? 'border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
-                        <option value="">— Pilih Group —</option>
-                        @foreach ($groups as $group)
-                            <option value="{{ $group->id }}"
-                                {{ old('part_group_id') == $group->id ? 'selected' : '' }}>
-                                {{ $group->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('part_group_id')
-                        <p class="mt-1.5 text-[12px] text-rose-500">{{ $message }}</p>
-                    @enderror
+                    <div id="group-display"
+                        class="w-full px-3.5 py-2.5 bg-slate-100 border-[1.5px] border-slate-200 rounded-[10px] text-[13px] text-slate-400 min-h-[42px] flex items-center">
+                        — otomatis dari part —
+                    </div>
                 </div>
 
                 {{-- Lokasi Stock --}}
@@ -79,7 +75,7 @@
                     <div>
                         <label class="block text-[12px] font-semibold text-slate-600 mb-1.5">Jumlah</label>
                         <input type="number" name="jumlah" value="{{ old('jumlah', 0) }}" placeholder="0"
-                            min="0" step="0.01"
+                            min="0" step="1"
                             class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[13px] text-slate-800 outline-none transition-all placeholder-slate-400
                             {{ $errors->has('jumlah') ? 'border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
                         @error('jumlah')
@@ -89,7 +85,7 @@
                     <div>
                         <label class="block text-[12px] font-semibold text-slate-600 mb-1.5">Nilai Stock (Rp)</label>
                         <input type="number" name="nilai_stock" value="{{ old('nilai_stock', 0) }}" placeholder="0"
-                            min="0" step="0.01"
+                            min="0" step="1"
                             class="w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] rounded-[10px] text-[13px] text-slate-800 outline-none transition-all placeholder-slate-400
                             {{ $errors->has('nilai_stock') ? 'border-rose-400 focus:ring-2 focus:ring-rose-50' : 'border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-50' }}">
                         @error('nilai_stock')
@@ -121,22 +117,98 @@
 
     @push('scripts')
         <script>
+            // ── Total Preview ──────────────────────────────────────────────────
             const jumlahInput = document.querySelector('input[name="jumlah"]');
             const nilaiInput = document.querySelector('input[name="nilai_stock"]');
             const previewTotal = document.getElementById('preview-total');
 
             function updateTotal() {
-                const jumlah = parseFloat(jumlahInput.value) || 0;
-                const nilai = parseFloat(nilaiInput.value) || 0;
-                const total = jumlah * nilai;
-                previewTotal.textContent = 'Rp ' + total.toLocaleString('id-ID', {
-                    minimumFractionDigits: 2
-                });
+                const jumlah = parseInt(jumlahInput.value) || 0;
+                const nilai = parseInt(nilaiInput.value) || 0;
+                previewTotal.textContent = 'Rp ' + (jumlah * nilai).toLocaleString('id-ID');
             }
-
             jumlahInput.addEventListener('input', updateTotal);
             nilaiInput.addEventListener('input', updateTotal);
             updateTotal();
+
+            // ── Autocomplete Kode Part ─────────────────────────────────────────
+            const kodePartInput = document.getElementById('kode-part-input');
+            const partSuggestions = document.getElementById('part-suggestions');
+            const partGroupIdInput = document.getElementById('part-group-id');
+            const groupDisplay = document.getElementById('group-display');
+
+            let debounceTimer = null;
+
+            kodePartInput.addEventListener('input', function() {
+                const keyword = this.value.trim();
+                partGroupIdInput.value = '';
+                groupDisplay.textContent = '— otomatis dari part —';
+                groupDisplay.className =
+                    'w-full px-3.5 py-2.5 bg-slate-100 border-[1.5px] border-slate-200 rounded-[10px] text-[13px] text-slate-400 min-h-[42px] flex items-center';
+
+                if (keyword.length < 3) {
+                    partSuggestions.classList.add('hidden');
+                    return;
+                }
+
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => searchParts(keyword), 350);
+            });
+
+            async function searchParts(keyword) {
+                try {
+                    const response = await fetch(`{{ route('parts.autocomplete') }}?q=${encodeURIComponent(keyword)}`);
+                    const data = await response.json();
+                    if (!data.length) {
+                        partSuggestions.classList.add('hidden');
+                        return;
+                    }
+                    renderSuggestions(data);
+                } catch (err) {
+                    partSuggestions.classList.add('hidden');
+                }
+            }
+
+            function renderSuggestions(parts) {
+                partSuggestions.innerHTML = parts.map(part => `
+                    <button type="button"
+                        onclick="selectPart('${esc(part.kode_part)}', ${part.part_group_id ?? 'null'}, '${esc(part.group_name ?? '')}')"
+                        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-brand-50 transition-colors text-left border-b border-slate-50 last:border-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-[13px] font-semibold text-slate-800 font-mono">${esc(part.kode_part)}</div>
+                            <div class="text-[11px] text-slate-400 truncate">${esc(part.deskripsi_part)}</div>
+                        </div>
+                        ${part.group_name ? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 flex-shrink-0">${esc(part.group_name)}</span>` : ''}
+                    </button>
+                `).join('');
+                partSuggestions.classList.remove('hidden');
+            }
+
+            function selectPart(kodePart, partGroupId, groupName) {
+                kodePartInput.value = kodePart;
+                partGroupIdInput.value = partGroupId ?? '';
+                partSuggestions.classList.add('hidden');
+
+                if (groupName) {
+                    groupDisplay.textContent = groupName;
+                    groupDisplay.className =
+                        'w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] border-slate-200 rounded-[10px] text-[13px] font-semibold text-slate-800 min-h-[42px] flex items-center';
+                } else {
+                    groupDisplay.textContent = '— tidak ada group —';
+                }
+            }
+
+            function esc(str) {
+                if (!str) return '';
+                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(
+                    /'/g, '&#039;');
+            }
+
+            document.addEventListener('click', function(e) {
+                if (!kodePartInput.contains(e.target) && !partSuggestions.contains(e.target)) {
+                    partSuggestions.classList.add('hidden');
+                }
+            });
         </script>
     @endpush
 </x-layouts.app>

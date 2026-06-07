@@ -60,7 +60,7 @@ class StockLocatorController extends Controller
     {
         $request->validate([
             'branch_id'     => 'required|exists:branches,id',
-            'kode_part'     => 'required|string|max:100',
+            'kode_part'     => 'required|string|max:100|exists:parts,kode_part',
             'part_group_id' => 'nullable|exists:part_groups,id',
             'lokasi_stock'  => 'nullable|string|max:100',
             'jumlah'        => 'required|numeric|min:0',
@@ -68,6 +68,7 @@ class StockLocatorController extends Controller
         ], [
             'branch_id.required'  => 'Cabang wajib dipilih.',
             'kode_part.required'  => 'Kode part wajib diisi.',
+            'kode_part.exists'    => 'Kode part tidak terdaftar di master part.',
             'jumlah.required'     => 'Jumlah wajib diisi.',
             'nilai_stock.required'=> 'Nilai stock wajib diisi.',
         ]);
@@ -92,11 +93,17 @@ class StockLocatorController extends Controller
     {
         $request->validate([
             'branch_id'     => 'required|exists:branches,id',
-            'kode_part'     => 'required|string|max:100',
+            'kode_part'     => 'required|string|max:100|exists:parts,kode_part',
             'part_group_id' => 'nullable|exists:part_groups,id',
             'lokasi_stock'  => 'nullable|string|max:100',
             'jumlah'        => 'required|numeric|min:0',
             'nilai_stock'   => 'required|numeric|min:0',
+        ], [
+            'branch_id.required'  => 'Cabang wajib dipilih.',
+            'kode_part.required'  => 'Kode part wajib diisi.',
+            'kode_part.exists'    => 'Kode part tidak terdaftar di master part.',
+            'jumlah.required'     => 'Jumlah wajib diisi.',
+            'nilai_stock.required'=> 'Nilai stock wajib diisi.',
         ]);
 
         $stockLocator->update($request->only([

@@ -19,8 +19,8 @@ class StockLocator extends Model
     ];
 
     protected $casts = [
-        'jumlah'      => 'decimal:2',
-        'nilai_stock' => 'decimal:2',
+        'jumlah'      => 'integer',
+        'nilai_stock' => 'integer',
     ];
 
     public function branch()
@@ -38,9 +38,8 @@ class StockLocator extends Model
         return $this->belongsTo(PartGroup::class, 'part_group_id')->withTrashed();
     }
 
-    // Computed total
-    public function getTotalNilaiAttribute(): float
+    public function getTotalNilaiAttribute(): int
     {
-        return (float) $this->jumlah * (float) $this->nilai_stock;
+        return (int)$this->jumlah * (int)$this->nilai_stock;
     }
 }
