@@ -164,6 +164,7 @@
                             data-edit-url="{{ route('attendances.edit', $att) }}"
                             data-delete-url="{{ route('attendances.destroy', $att) }}"
                             data-invoice-url="{{ route('attendances.invoice', $att) }}"
+                            data-supply-url="{{ route('attendances.supply.edit', $att) }}"
                             data-store-name="{{ addslashes($att->store_name) }}"
                             data-is-admin="{{ auth()->user()->isAdmin() ? 'true' : 'false' }}">
 
@@ -551,6 +552,13 @@
                 const isAdmin = row.dataset.isAdmin === 'true';
 
                 menu.innerHTML = `
+                @can('attendances.supply')
+    <a href="${row.dataset.supplyUrl}"
+        class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-purple-50 hover:text-purple-600 transition-colors font-medium">
+        📦 Input Supply
+    </a>
+    <div class="h-px bg-slate-100"></div>
+    @endcan
                 @can('attendances.invoice')
     <a href="${row.dataset.invoiceUrl}"
         class="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors font-medium">

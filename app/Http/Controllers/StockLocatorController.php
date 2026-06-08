@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\StockLocatorTemplateExport;
 use App\Jobs\ImportStockLocatorJob;
 use App\Models\Branch;
 use App\Models\PartGroup;
@@ -204,5 +205,13 @@ class StockLocatorController extends Controller
             'percentage' => $percentage,
             'is_done'    => $progress['done'] >= $progress['total'],
         ]);
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(
+            new StockLocatorTemplateExport(),
+            'template-stock-locator.xlsx'
+        );
     }
 }

@@ -354,22 +354,30 @@ class AttendanceController extends Controller
     // ── Generate Invoice (PDF) ─────────────────────────────────────────────────
     public function invoice(Attendance $attendance)
     {
-        // if (!auth()->user()->isAdmin() && $attendance->user_id !== auth()->id()) {
-        //     abort(403);
-        // }
+        $attendance->load(['user', 'items', 'supplies']);
 
-        $attendance->load(['user', 'items']);
+        // Kalau supply belum diisi, redirect ke halaman supply dulu
+        if ($attendance->supplies->isEmpty()) {
+            return redirect()
+                ->route('attendances.supply.edit', $attendance)
+                ->with('error', 'Silakan isi data supply terlebih dahulu sebelum generate invoice.');
+        }
 
-        // Ambil semua kode_part dari items attendance ini
-        $kodeParts = $attendance->items->pluck('kode_part')->unique();
+        $kodeParts = $attendance->supplies->pluck('kode_part')->unique();
 
-        // Query semua part sekaligus, key by kode_part untuk akses O(1)
         $partsMap = \App\Models\Part::with('group')
             ->whereIn('kode_part', $kodeParts)
             ->get()
             ->keyBy('kode_part');
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('attendances.invoice', compact('attendance', 'partsMap'))
+        $stockMap = \App\Models\StockLocator::with('branch')
+            ->whereIn('kode_part', $kodeParts)
+            ->get()
+            ->keyBy('kode_part');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('attendances.invoice', compact(
+            'attendance', 'partsMap', 'stockMap'
+        ))
             ->setPaper('a4', 'portrait')
             ->setOptions([
                 'dpi'                     => 150,
@@ -379,7 +387,7 @@ class AttendanceController extends Controller
                 'isFontSubsettingEnabled' => true,
             ]);
 
-        $filename = 'invoice-' . str_replace(' ', '-', strtolower($attendance->store_name))
+        $filename = 'invoice-' . str_replace(' ', '-', strtolower($attendance->generalStore?->name ?? $attendance->store_name ?? 'toko'))
             . '-' . $attendance->attendance_date->format('d-m-Y') . '.pdf';
 
         return $pdf->download($filename);

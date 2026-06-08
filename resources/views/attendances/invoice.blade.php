@@ -325,52 +325,50 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 40px;" class="center">No</th>
-                    <th style="width: 130px;">Kode Part</th>
+                    <th style="width: 30px;" class="center">No</th>
+                    <th style="width: 110px;">Kode Part</th>
                     <th>Deskripsi Part</th>
-                    <th style="width: 100px;">Group</th>
-                    <th style="width: 60px;" class="center">Qty</th>
-                    <th style="width: 90px;" class="center">HET (Rp)</th>
-                    <th style="width: 100px;" class="center">Total (Rp)</th>
+                    <th style="width: 80px;">Cabang</th>
+                    <th style="width: 80px;">Lokasi</th>
+                    <th style="width: 80px;">Group</th>
+                    <th style="width: 50px;" class="center">Request</th>
+                    <th style="width: 50px;" class="center">Supply</th>
+                    <th style="width: 80px;" class="center">HET (Rp)</th>
+                    <th style="width: 90px;" class="center">Total (Rp)</th>
                 </tr>
             </thead>
             <tbody>
                 @php $grandTotal = 0; @endphp
-                @forelse($attendance->items as $i => $item)
+                @forelse($attendance->supplies as $i => $supply)
                     @php
-                        $part = $partsMap[$item->kode_part] ?? null;
+                        $part = $partsMap[$supply->kode_part] ?? null;
+                        $stock = $stockMap[$supply->kode_part] ?? null;
                         $het = $part?->het ?? 0;
-                        $subtotal = $het * $item->quantity;
+                        $subtotal = $het * $supply->quantity_supplied;
                         $grandTotal += $subtotal;
                     @endphp
                     <tr>
                         <td class="center">{{ $i + 1 }}</td>
-                        <td class="mono">{{ $item->kode_part }}</td>
+                        <td class="mono">{{ $supply->kode_part }}</td>
                         <td>{{ $part?->deskripsi_part ?? '—' }}</td>
+                        <td>{{ $stock?->branch?->kode_cabang ?? '—' }}</td>
+                        <td>{{ $stock?->lokasi_stock ?? '—' }}</td>
                         <td>{{ $part?->group?->name ?? '—' }}</td>
-                        <td class="center">{{ $item->quantity }}</td>
-                        <td class="right">
-                            {{ $het ? number_format($het, 0, ',', '.') : '—' }}
-                        </td>
-                        <td class="right">
-                            {{ $subtotal ? number_format($subtotal, 0, ',', '.') : '—' }}
-                        </td>
+                        <td class="center">{{ $supply->quantity_requested }}</td>
+                        <td class="center">{{ $supply->quantity_supplied }}</td>
+                        <td class="right">{{ $het ? number_format($het, 0, ',', '.') : '—' }}</td>
+                        <td class="right">{{ $subtotal ? number_format($subtotal, 0, ',', '.') : '—' }}</td>
                     </tr>
                 @empty
                     <tr class="empty-row">
-                        <td colspan="7">Tidak ada part yang dipesan</td>
+                        <td colspan="10">Tidak ada data supply</td>
                     </tr>
                 @endforelse
 
-                {{-- Grand Total --}}
-                @if ($attendance->items->count() > 0)
+                @if ($grandTotal > 0)
                     <tr class="total-row">
-                        <td colspan="6" style="text-align: right; padding-right: 12px;">
-                            Total Keseluruhan
-                        </td>
-                        <td class="right">
-                            {{ number_format($grandTotal, 0, ',', '.') }}
-                        </td>
+                        <td colspan="9" style="text-align: right; padding-right: 12px;">Total Keseluruhan</td>
+                        <td class="right">{{ number_format($grandTotal, 0, ',', '.') }}</td>
                     </tr>
                 @endif
             </tbody>

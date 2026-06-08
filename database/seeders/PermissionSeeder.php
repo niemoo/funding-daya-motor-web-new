@@ -36,6 +36,7 @@ class PermissionSeeder extends Seeder
             'attendances.delete',
             'attendances.export',
             'attendances.invoice',
+            'attendances.supply',
 
             // Parts
             'parts.view',

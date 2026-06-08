@@ -35,6 +35,10 @@
             <p class="text-[13px] text-slate-400 mt-1">Total {{ $locators->total() }} data stock tercatat</p>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
+            <a href="{{ route('stock-locators.template') }}"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-[1.5px] border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] font-semibold rounded-[10px] transition-all">
+                📄 Template Excel
+            </a>
             @can('stock-locators.import')
                 <button onclick="openImportModal()"
                     class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-[1.5px] border-slate-200 hover:bg-slate-50 text-slate-600 text-[13px] font-semibold rounded-[10px] transition-all">
@@ -111,10 +115,10 @@
                             Group</th>
                         <x-sort-th column="lokasi_stock" label="Lokasi" :currentSort="$sort" :currentDir="$dir" />
                         <x-sort-th column="jumlah" label="Jumlah" :currentSort="$sort" :currentDir="$dir" />
-                        <x-sort-th column="nilai_stock" label="Nilai Stock" :currentSort="$sort" :currentDir="$dir" />
+                        {{-- <x-sort-th column="nilai_stock" label="Nilai Stock" :currentSort="$sort" :currentDir="$dir" />
                         <th
                             class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-right bg-slate-50 border-b border-slate-100">
-                            Total</th>
+                            Total</th> --}}
                         @if (auth()->user()->can('stock-locators.edit') || auth()->user()->can('stock-locators.delete'))
                             <th
                                 class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 px-4 py-3 text-center bg-slate-50 border-b border-slate-100">
@@ -166,12 +170,12 @@
                             <td class="px-4 py-3 text-[13px] text-slate-800 font-semibold">
                                 {{ number_format($locator->jumlah, 0, ',', '.') }}
                             </td>
-                            <td class="px-4 py-3 text-[13px] text-slate-600 text-right">
+                            {{-- <td class="px-4 py-3 text-[13px] text-slate-600 text-right">
                                 {{ number_format($locator->nilai_stock, 0, ',', '.') }}
                             </td>
                             <td class="px-4 py-3 text-[13px] font-semibold text-slate-800 text-right">
                                 {{ number_format($locator->total_nilai, 0, ',', '.') }}
-                            </td>
+                            </td> --}}
 
                             @if (auth()->user()->can('stock-locators.edit') || auth()->user()->can('stock-locators.delete'))
                                 <td class="px-4 py-3 text-center">

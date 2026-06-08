@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AttendanceSupplyController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GeneralStoreController;
@@ -72,6 +73,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/attendances/{attendance}/items/import/preview', [AttendanceController::class, 'importItemsPreview'])->name('attendances.items.import.preview');
     Route::post('/attendances/{attendance}/items/import/confirm', [AttendanceController::class, 'importItemsConfirm'])->name('attendances.items.import.confirm');
     Route::get('/attendances', [AttendanceController::class, 'index'])->name('attendances.index')->middleware('permission:attendances.view');
+    Route::get('/attendances/{attendance}/supply', [AttendanceSupplyController::class, 'edit'])
+    ->name('attendances.supply.edit')
+    ->middleware('permission:attendances.supply');
+
+Route::put('/attendances/{attendance}/supply', [AttendanceSupplyController::class, 'update'])
+    ->name('attendances.supply.update')
+    ->middleware('permission:attendances.supply');
 
     // Parts
     Route::get('/parts/import/progress', [PartController::class, 'importProgress'])
@@ -111,8 +119,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/parts/autocomplete', [PartController::class, 'autocomplete'])->name('parts.autocomplete');
 
-
-
     // Part Groups
     Route::get('/part-groups', [PartGroupController::class, 'index'])
         ->name('part-groups.index')
@@ -149,6 +155,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('permission:stock-locators.view')->group(function () {
         Route::resource('stock-locators', StockLocatorController::class)->except(['show']);
     });
+    Route::get('/stock-locators/template', [StockLocatorController::class, 'downloadTemplate'])
+    ->name('stock-locators.template');
 
     Route::middleware('permission:branches.view')->group(function () {
         Route::resource('branches', BranchController::class)->except(['show']);

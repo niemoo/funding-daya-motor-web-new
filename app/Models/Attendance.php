@@ -51,6 +51,11 @@ class Attendance extends Model
         return $this->belongsTo(GeneralStore::class)->withTrashed();
     }
 
+    public function supplies()
+    {
+        return $this->hasMany(AttendanceSupply::class);
+    }
+
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class, 'model_id')
