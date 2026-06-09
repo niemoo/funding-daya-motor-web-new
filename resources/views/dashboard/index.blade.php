@@ -273,54 +273,36 @@
 
     {{-- ── Top 10 Parts Terlaris ── --}}
     <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden my-6">
-        <div class="px-5 py-4 border-b border-slate-100">
-            <div class="text-[14px] font-bold text-slate-800">Top 10 Part Terlaris</div>
-            <div class="text-[12px] text-slate-400 mt-0.5">Bulan {{ now()->locale('id')->isoFormat('MMMM Y') }}
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <div>
+                <div class="text-[14px] font-bold text-slate-800">Top 10 Part dengan Permintaan Terbanyak</div>
+                <div class="text-[12px] text-slate-400 mt-0.5">Bulan {{ now()->locale('id')->isoFormat('MMMM Y') }}
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1.5">
+                    <div class="w-3 h-3 rounded-sm bg-brand-600"></div>
+                    <span class="text-[11px] text-slate-500">Request</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <div class="w-3 h-3 rounded-sm bg-emerald-500"></div>
+                    <span class="text-[11px] text-slate-500">Supply</span>
+                </div>
             </div>
         </div>
-        <div class="divide-y divide-slate-50">
-            @forelse($topParts as $i => $part)
-                <div class="flex items-center gap-3 px-5 py-3">
-                    <div
-                        class="w-6 h-6 rounded-lg bg-brand-50 flex items-center justify-center text-[11px] font-bold text-brand-600 flex-shrink-0">
-                        {{ $i + 1 }}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-[13px] font-semibold text-slate-800 font-mono truncate">
-                            {{ $part['kode_part'] }}</div>
-                        <div class="text-[11px] text-slate-400 truncate">{{ $part['deskripsi_part'] }}</div>
-                    </div>
-                    <div class="text-right flex-shrink-0">
-                        <div class="text-[13px] font-bold text-brand-600">{{ number_format($part['total_qty']) }} pcs
-                        </div>
-                        @if ($part['total_nilai'] > 0)
-                            <div class="text-[11px] text-slate-400">Rp
-                                {{ number_format($part['het'], 0, ',', '.') }} / pcs</div>
-                        @endif
-                    </div>
+
+        @if ($topParts->isEmpty())
+            <div class="px-5 py-8 text-center text-[13px] text-slate-400">Belum ada data bulan ini</div>
+        @else
+            <div class="p-5">
+                <canvas id="topPartsChart" style="max-height: 380px;"></canvas>
+                <div class="mt-3 flex items-center gap-1.5 text-[11px] text-slate-400">
+                    <span>ℹ️</span>
+                    <span>Data berdasarkan jumlah qty (pcs). Request part yang diminta, Supply yang dapat
+                        dipenuhi.</span>
                 </div>
-            @empty
-                <div class="px-5 py-8 text-center text-[13px] text-slate-400">Belum ada data bulan ini</div>
-            @endforelse
-            {{-- @forelse($topParts as $i => $part)
-                <div class="flex items-center gap-3 px-5 py-3">
-                    <div
-                        class="w-6 h-6 rounded-lg bg-brand-50 flex items-center justify-center text-[11px] font-bold text-brand-600 flex-shrink-0">
-                        {{ $i + 1 }}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-[13px] font-semibold text-slate-800 font-mono truncate">
-                            {{ $part['kode_part'] }}</div>
-                        <div class="text-[11px] text-slate-400 truncate">{{ $part['deskripsi_part'] }}</div>
-                    </div>
-                    <span
-                        class="text-[13px] font-bold text-brand-600 flex-shrink-0">{{ number_format($part['total_qty']) }}
-                        pcs</span>
-                </div>
-            @empty
-                <div class="px-5 py-8 text-center text-[13px] text-slate-400">Belum ada data bulan ini</div>
-            @endforelse --}}
-        </div>
+            </div>
+        @endif
     </div>
 
     {{-- ── Top 5 Toko ── --}}
@@ -463,6 +445,135 @@
                     padding: [40, 40]
                 });
             }
+        </script>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script>
+            @if ($topParts->isNotEmpty())
+                const topPartsData = @json($topParts->values());
+
+                const labels = topPartsData.map(p => p.kode_part);
+                const requestData = topPartsData.map(p => p.total_qty);
+                const supplyData = topPartsData.map(p => p.total_supplied);
+
+                // Hitung max untuk persentase
+                const maxVal = Math.max(...requestData, 1);
+
+                const ctx = document.getElementById('topPartsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                                label: 'Request',
+                                data: requestData,
+                                backgroundColor: 'rgba(29, 97, 175, 0.85)',
+                                borderRadius: 6,
+                                borderSkipped: false,
+                            },
+                            {
+                                label: 'Supply',
+                                data: supplyData,
+                                backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                                borderRadius: 6,
+                                borderSkipped: false,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: '#1e293b',
+                                titleFont: {
+                                    size: 12,
+                                    family: 'monospace'
+                                },
+                                bodyFont: {
+                                    size: 12
+                                },
+                                padding: 10,
+                                callbacks: {
+                                    title: (items) => {
+                                        const idx = items[0].dataIndex;
+                                        const part = topPartsData[idx];
+                                        return [part.kode_part, part.deskripsi_part];
+                                    },
+                                    label: (item) => {
+                                        const idx = item.dataIndex;
+                                        const req = requestData[idx];
+                                        const sup = supplyData[idx];
+                                        const het = topPartsData[idx].het;
+                                        const pct = req > 0 ? Math.round((sup / req) * 100) : 0;
+
+                                        const totalReq = het * req;
+                                        const totalSup = het * sup;
+
+                                        const fmt = (val) => 'Rp ' + val.toLocaleString('id-ID');
+
+                                        if (item.datasetIndex === 0) {
+                                            return [
+                                                ' Request : ' + req.toLocaleString('id-ID') + ' pcs',
+                                                het > 0 ? ' Total   : ' + fmt(totalReq) : '',
+                                            ].filter(Boolean);
+                                        } else {
+                                            return [
+                                                ' Supply  : ' + sup.toLocaleString('id-ID') + ' pcs (' + pct +
+                                                '%)',
+                                                het > 0 ? ' Total   : ' + fmt(totalSup) : '',
+                                            ].filter(Boolean);
+                                        }
+                                    },
+                                    afterBody: (items) => {
+                                        const idx = items[0].dataIndex;
+                                        const het = topPartsData[idx].het;
+                                        if (het > 0) {
+                                            return ['', ' HET/pcs : Rp ' + het.toLocaleString('id-ID')];
+                                        }
+                                        return [];
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 10,
+                                        family: 'monospace'
+                                    },
+                                    color: '#64748b',
+                                    maxRotation: 30,
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgba(226, 232, 240, 0.6)'
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 11
+                                    },
+                                    color: '#94a3b8',
+                                    callback: (val) => val.toLocaleString('id-ID') + ' pcs',
+                                },
+                                beginAtZero: true,
+                            }
+                        }
+                    }
+                });
+            @endif
         </script>
     @endpush
 </x-layouts.app>

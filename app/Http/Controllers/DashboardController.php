@@ -77,24 +77,37 @@ class DashboardController extends Controller
             ->get();
 
         // ── Top 10 Parts Terlaris ──
-        $topParts = AttendanceItem::query()
+        $topPartsRaw = AttendanceItem::query()
             ->selectRaw('kode_part, SUM(quantity) as total_qty')
             ->whereHas('attendance', fn($q) => $q->whereMonth('attendance_date', now()->month)
                 ->whereYear('attendance_date', now()->year))
             ->groupBy('kode_part')
             ->orderByDesc('total_qty')
             ->limit(10)
+            ->get();
+
+        // Ambil total supply per kode_part
+        $supplyTotals = \App\Models\AttendanceSupply::query()
+            ->selectRaw('kode_part, SUM(quantity_supplied) as total_supplied')
+            ->whereHas('attendance', fn($q) => $q->whereMonth('attendance_date', now()->month)
+                ->whereYear('attendance_date', now()->year))
+            ->whereIn('kode_part', $topPartsRaw->pluck('kode_part'))
+            ->groupBy('kode_part')
             ->get()
-            ->map(function ($item) {
-                $part = Part::withTrashed()->where('kode_part', $item->kode_part)->first();
-                return [
-                    'kode_part'      => $item->kode_part,
-                    'deskripsi_part' => $part?->deskripsi_part ?? '—',
-                    'total_qty'      => $item->total_qty,
-                    'het'            => $part?->het ?? 0,
-                    'total_nilai'    => $item->total_qty * ($part?->het ?? 0),
-                ];
-            });
+            ->keyBy('kode_part');
+
+        $topParts = $topPartsRaw->map(function ($item) use ($supplyTotals) {
+            $part = Part::withTrashed()->where('kode_part', $item->kode_part)->first();
+            $totalSupplied = $supplyTotals[$item->kode_part]->total_supplied ?? 0;
+            return [
+                'kode_part'      => $item->kode_part,
+                'deskripsi_part' => $part?->deskripsi_part ?? '—',
+                'total_qty'      => (int)$item->total_qty,
+                'total_supplied' => (int)$totalSupplied,
+                'het'            => $part?->het ?? 0,
+                'total_nilai'    => $item->total_qty * ($part?->het ?? 0),
+            ];
+        });
 
         // ── Top 5 Toko Terlaris ──
         $topStores = Attendance::query()
